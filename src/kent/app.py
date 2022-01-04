@@ -66,9 +66,9 @@ def create_app(test_config=None):
             app.logger.info(f"{key}: {val}")
 
         if request.headers.get("content-encoding") == "gzip":
-            body = gzip.decompress(request.body)
+            body = gzip.decompress(request.data)
         else:
-            body = request.body
+            body = request.data
 
         if request.headers.get("content-type") == "application/json":
             body = json.loads(body)
