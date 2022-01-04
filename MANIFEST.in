@@ -1,0 +1,7 @@
+include Makefile
+include tox.ini
+recursive-include src *.css
+recursive-include src *.html
+recursive-include src *.ico
+recursive-include src *.md
+recursive-include tests *.py

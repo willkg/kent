@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Kent: Fake Sentry</title>
+    <link rel="icon" type="image/png" href="/static/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="/static/pico.1.4.3.min.css" />
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+  </head>
+  <body>
+    {% block body %}
+      <main class="container">
+        <hgroup>
+          <h1>Kent</h1>
+          <h2>A fake Sentry server for debugging and integration tests</h2>
+        </hgroup>
+
+        <h2>Errors</h2>
+        <p>There are {{ errors|count }} errors in memory.</p>
+        {% if errors %}
+          <ul>
+            {% for error_id, error in errors %}
+              <li><a href="/api/error/{{ error_id }}">{{ error_id }}</a></li>
+          {% endfor %}
+          </ul>
+        {% endif %}
+
+        <h2>API</h2>
+        <table>
+          <tr>
+            <th scope="col">Name</th>
+            <th scope="col">End point</th>
+            <th scope="col">Notes</th>
+          </tr>
+          <tr>
+            <td class="nowrap">Sentry DSN</td>
+            <td class="nowrap"><code>{{ dsn }}</code></td>
+            <td>
+              <small>
+                If you're running this in a Docker container and the
+                service you want sending errors to Fake Sentry is in another
+                Docker container, then you will need to use the appropriate
+                host for the service.
+              </small>
+            </td>
+          </tr>
+          <tr>
+            <td class="nowrap">Error list</td>
+            <td class="nowrap"><code>{{ host }}/api/errorlist/</code></td>
+            <td></td>
+          </tr>
+          <tr>
+            <td class="nowrap">Error</td>
+            <td class="nowrap"><code>{{ host }}/api/error/&lt;ERRORID&gt;</code></td>
+            <td></td>
+          </tr>
+        </table>
+        <p>
+          Always use Sentry project id 1.
+        </p>
+      </main>
+      <footer class="container">
+        <small>
+          Powered by Kent: the fakest Sentry | 
+          version {{ version }} |
+          <a href="https://github.com/willkg/kent/">source</a>
+        </small>
+      </footer>
+    {% endblock %}
+  </body>
+</html>
