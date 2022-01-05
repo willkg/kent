@@ -46,7 +46,13 @@ def create_app(test_config=None):
     def index_view():
         host = request.scheme + "://" + request.headers["host"]
         dsn = request.scheme + "://public@" + request.headers["host"] + "/1"
-        return render_template("index.html", host=host, dsn=dsn, errors=ERRORS.get_errors(), version=__version__)
+        return render_template(
+            "index.html",
+            host=host,
+            dsn=dsn,
+            errors=ERRORS.get_errors(),
+            version=__version__,
+        )
 
     @app.route("/api/error/<error_id>", methods=["GET"])
     def api_error_view(error_id):
