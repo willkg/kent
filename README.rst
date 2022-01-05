@@ -106,3 +106,28 @@ Kent definitely works with:
 
 I don't know about anything else. If you use Kent with another Sentry client,
 add an issue with details or a pull request to update the README.
+
+
+Release process
+===============
+
+1. Check out main tip.
+2. Update ``__version__`` in ``src/kent/__init__.py``.
+3. Run::
+
+      $ make checkrot
+      $ make test
+      $ make testdocker
+      $ check-manifest
+
+   Fix any issues from that.
+4. Update ``HISTORY.rst``.
+5. Push any changes to GitHub.
+6. Release::
+
+      $ git tag --sign 1.0.0
+      # Use contents from HISTORY.rst for tag comment
+
+      $ make clean
+      $ python setup.py sdist bdist_wheel
+      $ twine upload dist/*

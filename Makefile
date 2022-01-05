@@ -28,3 +28,8 @@ checkrot:  ## Check package rot for dev dependencies
 	./tmpvenv/bin/pip install '.[dev]'
 	./tmpvenv/bin/pip list -o
 	rm -rf ./tmpvenv/
+
+.PHONY: testdocker
+testdocker:  ## Build Docker image and run it
+	docker build --no-cache -t faksentry:latest .
+	docker run --rm --publish 8000:8000 fakesentry:latest run --host 0.0.0.0 --port 8000
