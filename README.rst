@@ -100,6 +100,9 @@ that want to assert things about errors.
 ``/api/error/ERRORID``
     Retrieve the payload for a specific error by id.
 
+``/api/flush/``
+    Flushes the error manager of all errors.
+
 Kent definitely works with:
 
 * Python sentry-sdk client
