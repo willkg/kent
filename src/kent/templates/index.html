@@ -31,30 +31,70 @@
         <table>
           <tr>
             <th scope="col">Name</th>
-            <th scope="col">End point</th>
-            <th scope="col">Notes</th>
+            <th scope="col">End point and notes</th>
           </tr>
           <tr>
             <td class="nowrap">Sentry DSN</td>
-            <td class="nowrap"><code>{{ dsn }}</code></td>
             <td>
-              <small>
+              <p><code>{{ dsn }}</code></p>
+              <p>Returns no payload.</p>
+              <p>
                 If you're running this in a Docker container and the
                 service you want sending errors to Fake Sentry is in another
                 Docker container, then you will need to use the appropriate
                 host for the service.
-              </small>
+              </p>
             </td>
           </tr>
           <tr>
             <td class="nowrap">Error list</td>
-            <td class="nowrap"><code>{{ host }}/api/errorlist/</code></td>
-            <td></td>
+            <td>
+              <p><code>{{ host }}/api/errorlist/</code></p>
+              <p>Returns JSON payload.</p>
+              <dl>
+                <dt><code>errors</code></dt>
+                <dd>List of error ids as strings.</dd>
+              </dl>
+              <p>Example:</p>
+<pre><code>{
+  "errors": [
+    "f2edba96-0433-47e0-af86-ecfbbb16a544",
+    "1a45b81f-5960-4174-9945-7fe9a8285d90
+  ]
+}</code></pre>
+            </td>
           </tr>
           <tr>
             <td class="nowrap">Error</td>
-            <td class="nowrap"><code>{{ host }}/api/error/&lt;ERRORID&gt;</code></td>
-            <td></td>
+            <td>
+              <p><code>{{ host }}/api/error/&lt;ERRORID&gt;</code></p>
+              <p>Returns JSON payload.</p>
+              <dl>
+                <dt><code>error_id</code></dt>
+                <dd>Error id as a string</dd>
+                <dt><code>payload</code></dt>
+                <dd>Error payload sent by the sentry-sdk</dd>
+              </dl>
+              <p>Contrived example:</p>
+<pre><code>{
+  "error_id": "f2edba96-0433-47e0-af86-ecfbbb16a544",
+  "payload": {
+    whatever sentry-sdk sent here
+  }
+}</code></pre>
+            </td>
+          </tr>
+          <tr>
+            <td class="nowrap">Flush errors</td>
+            <td>
+              <p><code>{{ host }}/api/flush/</code></p>
+              <p>Returns JSON payload.</p>
+              <dl>
+                  <dt><code>success</code></dt>
+                  <dd><i>true</i> if successful</dd>
+              </dl>
+              <p>Example:</p>
+<pre><code>{"success": true}</code></pre>
           </tr>
         </table>
         <p>

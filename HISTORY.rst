@@ -2,6 +2,14 @@
 HISTORY
 =======
 
+In development (xxx)
+====================
+
+* Fix ``/api/errorlist/`` bug
+* Add ``/api/flush/`` endpoint to flush the error manager
+* Add tests
+
+
 0.1.0 (January 4th, 2022)
 =========================
 
