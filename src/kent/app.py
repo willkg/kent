@@ -31,11 +31,17 @@ class ErrorManager:
     def get_errors(self):
         return self.errors
 
+    def flush(self):
+        self.errors = []
+
 
 ERRORS = ErrorManager()
 
 
 def create_app(test_config=None):
+    # Always start an app with an empty error manager
+    ERRORS.flush()
+
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(SECRET_KEY="dev")
 
@@ -60,11 +66,17 @@ def create_app(test_config=None):
         if error is None:
             return {"error": f"Error {error_id} not found"}, 404
 
-        return {"error_id": error_id, "error": error}
+        return {"error_id": error_id, "payload": error}
 
     @app.route("/api/errorlist/", methods=["GET"])
-    def api_error_list():
-        return {"errors": list(ERRORS.keys())}
+    def api_error_list_view():
+        errors = [error_id for error_id, error in ERRORS.get_errors()]
+        return {"errors": errors}
+
+    @app.route("/api/flush/", methods=["GET"])
+    def api_flush_view():
+        ERRORS.flush()
+        return {"success": True}
 
     @app.route("/api/1/store/", methods=["POST"])
     def store_view():
