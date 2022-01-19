@@ -73,7 +73,7 @@ def create_app(test_config=None):
         errors = [error_id for error_id, error in ERRORS.get_errors()]
         return {"errors": errors}
 
-    @app.route("/api/flush/", methods=["GET"])
+    @app.route("/api/flush/", methods=["POST"])
     def api_flush_view():
         ERRORS.flush()
         return {"success": True}

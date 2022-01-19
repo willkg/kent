@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # yyyymmdd
-__releasedate__ = "20220105"
+__releasedate__ = ""
 # x.y.z or x.y.z.dev0
-__version__ = "0.2.0"
+__version__ = "0.3.0"

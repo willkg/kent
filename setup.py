@@ -28,6 +28,7 @@ EXTRAS_REQUIRE = {
         "black==21.12b0",
         "flake8==4.0.1",
         "pytest==6.2.5",
+        "sentry-sdk==1.5.2",
         "tox==3.24.5",
     ]
 }
@@ -51,7 +52,8 @@ setup(
     keywords="sentry integration service",
     entry_points="""
         [console_scripts]
-        kent-server=kent.cli:main
+        kent-server=kent.cli_server:main
+        kent-testpost=kent.cli_testpost:main
     """,
     classifiers=[
         "Development Status :: 5 - Production/Stable",

@@ -23,7 +23,7 @@ def test_store_view(client):
 
 
 def test_api_flush_view(client):
-    resp = client.get("/api/flush/")
+    resp = client.post("/api/flush/")
     assert resp.status_code == 200
     assert resp.json == {"success": True}
 

@@ -2,6 +2,18 @@
 HISTORY
 =======
 
+0.3.0 (in development)
+======================
+
+Backwards incompatible changes:
+
+* changed ``/api/flush/`` from a GET to a POST
+
+Fixes:
+
+* Feature: added link to flush events to index page (#9)
+
+
 0.2.0 (January 5th, 2022)
 =========================
 
