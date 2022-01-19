@@ -2,8 +2,8 @@
 HISTORY
 =======
 
-0.3.0 (in development)
-======================
+0.3.0 (January 19th, 2022)
+==========================
 
 Backwards incompatible changes:
 
@@ -16,6 +16,8 @@ Fixes:
 * Feature: Support multiple project ids (#7)
 * Feature: Add timestamp to event list (#8)
 * Feature: Add link to flush events to index page (#9)
+
+Kent eyed my slice of ice cream cake with interest.
 
 
 0.2.0 (January 5th, 2022)
