@@ -94,13 +94,13 @@ to Kent's index page.
 You can also access it with the API. This is most useful for integration tests
 that want to assert things about errors.
 
-``/api/errorlist/``
+``GET /api/errorlist/``
     List of all errors in memory with a unique error id.
 
-``/api/error/ERRORID``
+``GET /api/error/ERRORID``
     Retrieve the payload for a specific error by id.
 
-``/api/flush/``
+``POST /api/flush/``
     Flushes the error manager of all errors.
 
 Kent definitely works with:
@@ -111,8 +111,18 @@ I don't know about anything else. If you use Kent with another Sentry client,
 add an issue with details or a pull request to update the README.
 
 
+Development
+===========
+
+Install
+-------
+
+1. ``mkvirtualenv kent``
+2. ``pip install -e '.[dev]'``
+
+
 Release process
-===============
+---------------
 
 1. Check out main tip.
 2. Update ``__version__`` in ``src/kent/__init__.py``.

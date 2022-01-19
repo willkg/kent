@@ -31,5 +31,5 @@ checkrot:  ## Check package rot for dev dependencies
 
 .PHONY: testdocker
 testdocker:  ## Build Docker image and run it
-	docker build --no-cache -t faksentry:latest .
-	docker run --rm --publish 8000:8000 fakesentry:latest run --host 0.0.0.0 --port 8000
+	docker build --no-cache -t fakesentry:latest .
+	docker run --rm --publish 5000:5000 fakesentry:latest run --host 0.0.0.0 --port 5000

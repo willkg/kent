@@ -8,6 +8,16 @@
     <link rel="icon" type="image/png" href="/static/favicon.ico" />
     <link rel="stylesheet" type="text/css" href="/static/pico.1.4.3.min.css" />
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <script>
+      function flush() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", window.location.origin + "/api/flush/");
+        xhr.send();
+        xhr.onload = function() {
+          window.location.reload();
+        };
+      }
+    </script>
   </head>
   <body>
     {% block body %}
@@ -18,7 +28,10 @@
         </hgroup>
 
         <h2>Errors</h2>
-        <p>There are {{ errors|count }} errors in memory.</p>
+        <p>
+          There are {{ errors|count }} errors in memory.
+          <a href="#" onClick ="javascript:flush()">[Flush]</a>
+        </p>
         {% if errors %}
           <ul>
             {% for error_id, error in errors %}
@@ -36,7 +49,7 @@
           <tr>
             <td class="nowrap">Sentry DSN</td>
             <td>
-              <p><code>{{ dsn }}</code></p>
+              <p><code>GET {{ dsn }}</code></p>
               <p>Returns no payload.</p>
               <p>
                 If you're running this in a Docker container and the
@@ -49,7 +62,7 @@
           <tr>
             <td class="nowrap">Error list</td>
             <td>
-              <p><code>{{ host }}/api/errorlist/</code></p>
+              <p><code>GET {{ host }}/api/errorlist/</code></p>
               <p>Returns JSON payload.</p>
               <dl>
                 <dt><code>errors</code></dt>
@@ -67,7 +80,7 @@
           <tr>
             <td class="nowrap">Error</td>
             <td>
-              <p><code>{{ host }}/api/error/&lt;ERRORID&gt;</code></p>
+              <p><code>GET {{ host }}/api/error/&lt;ERRORID&gt;</code></p>
               <p>Returns JSON payload.</p>
               <dl>
                 <dt><code>error_id</code></dt>
@@ -87,7 +100,7 @@
           <tr>
             <td class="nowrap">Flush errors</td>
             <td>
-              <p><code>{{ host }}/api/flush/</code></p>
+              <p><code>POST {{ host }}/api/flush/</code></p>
               <p>Returns JSON payload.</p>
               <dl>
                   <dt><code>success</code></dt>
