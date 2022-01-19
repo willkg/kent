@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from dataclasses import dataclass
 import gzip
 import json
 import uuid
@@ -11,22 +12,42 @@ from kent import __version__
 from flask import Flask, request, render_template
 
 
+@dataclass
+class Error:
+    project_id: int
+    error_id: str
+    payload: dict
+
+    def get_timestamp(self):
+        return self.payload.get("timestamp", "none")
+
+    def to_dict(self):
+        return {
+            "project_id": self.project_id,
+            "error_id": self.error_id,
+            "payload": self.payload,
+        }
+
+
 class ErrorManager:
     MAX_ERRORS = 100
 
     def __init__(self):
-        # List of (errorid, payload) tuples
+        # List of Error instances
         self.errors = []
 
-    def add_error(self, error):
-        self.errors.append((str(uuid.uuid4()), error))
+    def add_error(self, project_id, payload):
+        error_id = str(uuid.uuid4())
+        error = Error(project_id=project_id, error_id=error_id, payload=payload)
+        self.errors.append(error)
+
         while len(self.errors) > self.MAX_ERRORS:
             self.errors.pop(0)
 
     def get_error(self, error_id):
-        for key, val in self.errors:
-            if key == error_id:
-                return val
+        for error in self.errors:
+            if error.error_id == error_id:
+                return error
         return None
 
     def get_errors(self):
@@ -53,14 +74,12 @@ def create_app(test_config=None):
     def index_view():
         host = request.scheme + "://" + request.headers["host"]
         dsn = request.scheme + "://public@" + request.headers["host"] + "/1"
-        errors = ERRORS.get_errors()
-        error_info = [(error_id, payload["timestamp"]) for error_id, payload in errors]
 
         return render_template(
             "index.html",
             host=host,
             dsn=dsn,
-            errors=error_info,
+            errors=ERRORS.get_errors(),
             version=__version__,
         )
 
@@ -70,20 +89,20 @@ def create_app(test_config=None):
         if error is None:
             return {"error": f"Error {error_id} not found"}, 404
 
-        return {"error_id": error_id, "payload": error}
+        return error.to_dict()
 
     @app.route("/api/errorlist/", methods=["GET"])
     def api_error_list_view():
-        errors = [error_id for error_id, error in ERRORS.get_errors()]
-        return {"errors": errors}
+        error_ids = [error.error_id for error in ERRORS.get_errors()]
+        return {"errors": error_ids}
 
     @app.route("/api/flush/", methods=["POST"])
     def api_flush_view():
         ERRORS.flush()
         return {"success": True}
 
-    @app.route("/api/1/store/", methods=["POST"])
-    def store_view():
+    @app.route("/api/<int:project_id>/store/", methods=["POST"])
+    def store_view(project_id):
         for key, val in request.headers.items():
             app.logger.info(f"{key}: {val}")
 
@@ -96,7 +115,8 @@ def create_app(test_config=None):
             body = json.loads(body)
 
         if body:
-            ERRORS.add_error(body)
+            ERRORS.add_error(project_id=project_id, payload=body)
+
         return {"success": True}
 
     return app

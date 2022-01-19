@@ -79,13 +79,12 @@ Then::
 Things to know about Kent
 =========================
 
-Kent is the fakest of fake Sentry servers. It supports a single Sentry project
-with id ``1``. You can set up a Sentry DSN to point to Kent and have your
-application send errors.
+Kent is the fakest of fake Sentry servers. You can set up a Sentry DSN to point
+to Kent and have your application send errors to it.
 
 Kent is a refined fake Sentry service and doesn't like fast food.
 
-Kent will keep track of the last 100 it received in memory. Nothing is
+Kent will keep track of the last 100 payloads it received in memory. Nothing is
 persisted to disk.
 
 You can access the list of errors and error data with your web browser by going
@@ -102,6 +101,15 @@ that want to assert things about errors.
 
 ``POST /api/flush/``
     Flushes the error manager of all errors.
+
+You can use multiple project ids. Kent will keep the errors separate.
+
+If you run ``kent-server run`` with the defaults, your DSN is::
+
+    http://public@locahost:5000/1    for project id 1
+    http://public@locahost:5000/2    for project id 2
+    ...
+
 
 Kent definitely works with:
 
