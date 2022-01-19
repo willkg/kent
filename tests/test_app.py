@@ -64,4 +64,8 @@ class TestAPIErrorView:
         # Get the error by error_id
         resp = client.get(f"/api/error/{error_id}")
         assert resp.status_code == 200
-        assert resp.json == {"error_id": error_id, "payload": error_payload}
+        assert resp.json == {
+            "project_id": 1,
+            "error_id": error_id,
+            "payload": error_payload,
+        }

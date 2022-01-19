@@ -7,10 +7,13 @@ HISTORY
 
 Backwards incompatible changes:
 
-* changed ``/api/flush/`` from a GET to a POST
+* Changed ``/api/flush/`` from a GET to a POST
+* Changed response for ``/api/error/<ERRORID>`` to return a ``project_id`` key
+  as well.
 
 Fixes:
 
+* Feature: Support multiple project ids (#7)
 * Feature: Add timestamp to event list (#8)
 * Feature: Add link to flush events to index page (#9)
 

@@ -36,13 +36,15 @@
           <table>
             <thead>
               <th>timestamp</th>
+              <th>project id</th>
               <th>id</th>
             </thead>
             <tbody>
-              {% for error_id, timestamp in errors %}
+              {% for error in errors %}
                 <tr>
-                  <td>{{ timestamp }}</td>
-                  <td><a href="/api/error/{{ error_id }}">{{ error_id }}</a></td>
+                  <td>{{ error.get_timestamp() }}</td>
+                  <td>{{ error.project_id }}</td>
+                  <td><a href="/api/error/{{ error.error_id }}">{{ error.error_id }}</a></td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -92,6 +94,8 @@
               <p><code>GET {{ host }}/api/error/&lt;ERRORID&gt;</code></p>
               <p>Returns JSON payload.</p>
               <dl>
+                <dt><code>project_id</code></dt>
+                <dd>Project id as an int</dd>
                 <dt><code>error_id</code></dt>
                 <dd>Error id as a string</dd>
                 <dt><code>payload</code></dt>
@@ -99,6 +103,7 @@
               </dl>
               <p>Contrived example:</p>
 <pre><code>{
+  "project_id": 1,
   "error_id": "f2edba96-0433-47e0-af86-ecfbbb16a544",
   "payload": {
     whatever sentry-sdk sent here
@@ -119,9 +124,6 @@
 <pre><code>{"success": true}</code></pre>
           </tr>
         </table>
-        <p>
-          Always use Sentry project id 1.
-        </p>
       </main>
       <footer class="container">
         <small>
