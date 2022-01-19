@@ -15,6 +15,7 @@ class ErrorManager:
     MAX_ERRORS = 100
 
     def __init__(self):
+        # List of (errorid, payload) tuples
         self.errors = []
 
     def add_error(self, error):
@@ -52,11 +53,14 @@ def create_app(test_config=None):
     def index_view():
         host = request.scheme + "://" + request.headers["host"]
         dsn = request.scheme + "://public@" + request.headers["host"] + "/1"
+        errors = ERRORS.get_errors()
+        error_info = [(error_id, payload["timestamp"]) for error_id, payload in errors]
+
         return render_template(
             "index.html",
             host=host,
             dsn=dsn,
-            errors=ERRORS.get_errors(),
+            errors=error_info,
             version=__version__,
         )
 

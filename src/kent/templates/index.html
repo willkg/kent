@@ -33,11 +33,20 @@
           <a href="#" onClick ="javascript:flush()">[Flush]</a>
         </p>
         {% if errors %}
-          <ul>
-            {% for error_id, error in errors %}
-              <li><a href="/api/error/{{ error_id }}">{{ error_id }}</a></li>
-          {% endfor %}
-          </ul>
+          <table>
+            <thead>
+              <th>timestamp</th>
+              <th>id</th>
+            </thead>
+            <tbody>
+              {% for error_id, timestamp in errors %}
+                <tr>
+                  <td>{{ timestamp }}</td>
+                  <td><a href="/api/error/{{ error_id }}">{{ error_id }}</a></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
         {% endif %}
 
         <h2>API</h2>
