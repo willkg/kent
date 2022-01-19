@@ -11,7 +11,8 @@ Backwards incompatible changes:
 
 Fixes:
 
-* Feature: added link to flush events to index page (#9)
+* Feature: Add timestamp to event list (#8)
+* Feature: Add link to flush events to index page (#9)
 
 
 0.2.0 (January 5th, 2022)
