@@ -28,7 +28,7 @@ EXTRAS_REQUIRE = {
         "black==21.12b0",
         "flake8==4.0.1",
         "pytest==6.2.5",
-        "sentry-sdk==1.5.2",
+        "sentry-sdk==1.5.3",
         "tox==3.24.5",
         "tox-gh-actions==2.9.1",
         "twine==3.7.1",
