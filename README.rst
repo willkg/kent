@@ -114,6 +114,7 @@ If you run ``kent-server run`` with the defaults, your DSN is::
 Kent definitely works with:
 
 * Python sentry-sdk client
+* Python raven client (deprecated)
 
 I don't know about anything else. If you use Kent with another Sentry client,
 add an issue with details or a pull request to update the README.
