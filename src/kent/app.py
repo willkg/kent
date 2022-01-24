@@ -5,21 +5,48 @@
 from dataclasses import dataclass
 import gzip
 import json
+import logging
+from logging.config import dictConfig
+from typing import Union
 import uuid
+import zlib
 
 from kent import __version__
 
 from flask import Flask, request, render_template
 
 
+dictConfig(
+    {
+        "version": 1,
+        "handlers": {
+            "wsgi": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://flask.logging.wsgi_errors_stream",
+            },
+        },
+        "root": {
+            "level": logging.INFO,
+            "handlers": ["wsgi"],
+        },
+    }
+)
+
+
 @dataclass
 class Error:
     project_id: int
     error_id: str
-    payload: dict
+
+    # This is either a dict or a bytes depending on whether this is raven or
+    # sentry-sdk
+    payload: Union[dict, bytes]
 
     def get_timestamp(self):
-        return self.payload.get("timestamp", "none")
+        if self.payload and isinstance(self.payload, dict):
+            return self.payload.get("timestamp", "none")
+
+        return "none"
 
     def to_dict(self):
         return {
@@ -106,13 +133,21 @@ def create_app(test_config=None):
         for key, val in request.headers.items():
             app.logger.info(f"{key}: {val}")
 
+        # Decompress it
         if request.headers.get("content-encoding") == "gzip":
             body = gzip.decompress(request.data)
+        elif request.headers.get("content-encoding") == "deflate":
+            body = zlib.decompress(request.data)
         else:
             body = request.data
 
-        if request.headers.get("content-type") == "application/json":
+        # If it's JSON, then decode it
+        try:
             body = json.loads(body)
+        except Exception:
+            app.logger.exception("exception when JSON-decoding body.")
+            app.logger.error(body)
+            body = {"error": "Kent could not decode body; see logs"}
 
         if body:
             ERRORS.add_error(project_id=project_id, payload=body)
