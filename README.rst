@@ -106,8 +106,8 @@ You can use multiple project ids. Kent will keep the errors separate.
 
 If you run ``kent-server run`` with the defaults, your DSN is::
 
-    http://public@locahost:5000/1    for project id 1
-    http://public@locahost:5000/2    for project id 2
+    http://public@localhost:5000/1    for project id 1
+    http://public@localhost:5000/2    for project id 2
     ...
 
 
