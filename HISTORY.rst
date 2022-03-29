@@ -2,6 +2,16 @@
 HISTORY
 =======
 
+0.4.1 (March 29th, 2022)
+========================
+
+Fixes:
+
+* Bug: kent-server didn't work with Flask 2.1.0. (#23)
+
+Kent can make croissants disappear.
+
+
 0.4.0 (January 24th, 2022)
 ==========================
 
