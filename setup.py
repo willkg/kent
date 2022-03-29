@@ -22,16 +22,16 @@ def get_file(fn):
         return fp.read()
 
 
-INSTALL_REQUIRES = ["flask<3"]
+INSTALL_REQUIRES = ["flask>=2.1.0,<3"]
 EXTRAS_REQUIRE = {
     "dev": [
-        "black==21.12b0",
+        "black==22.3.0",
         "flake8==4.0.1",
-        "pytest==6.2.5",
-        "sentry-sdk==1.5.3",
+        "pytest==7.1.1",
+        "sentry-sdk==1.5.8",
         "tox==3.24.5",
         "tox-gh-actions==2.9.1",
-        "twine==3.7.1",
+        "twine==3.8.0",
     ]
 }
 

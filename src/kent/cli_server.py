@@ -5,11 +5,10 @@
 import os
 import socket
 
-from flask.cli import cli as flask_cli
-from werkzeug import serving
-
 os.environ["FLASK_APP"] = "kent.app"
-os.environ["WERKZEUG_RUN_MAIN"] = "true"
+
+from flask.cli import main as flask_main  # noqa
+from werkzeug import serving  # noqa
 
 
 def mock_get_interface_ip(family):
@@ -27,4 +26,4 @@ serving.get_interface_ip = mock_get_interface_ip
 
 
 def main():
-    flask_cli.main()
+    flask_main()
