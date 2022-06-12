@@ -33,18 +33,18 @@
           <a href="#" onClick ="javascript:flush()">[Flush]</a>
         </p>
         {% if errors %}
-          <table>
+          <table class="summary">
             <thead>
               <th>timestamp</th>
-              <th>project id</th>
-              <th>id</th>
+              <th>project: event id</th>
+              <th>summary</th>
             </thead>
             <tbody>
               {% for error in errors %}
                 <tr>
-                  <td>{{ error.get_timestamp() }}</td>
-                  <td>{{ error.project_id }}</td>
-                  <td><a href="/api/error/{{ error.error_id }}">{{ error.error_id }}</a></td>
+                  <td>{{ error.timestamp }}</td>
+                  <td class="nowrap"><a href="/api/error/{{ error.error_id }}">{{ error.project_id }}: {{ error.error_id }}</a></td>
+                  <td>{{ error.summary }}</td>
                 </tr>
               {% endfor %}
             </tbody>
