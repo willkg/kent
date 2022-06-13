@@ -11,9 +11,9 @@ from typing import Union
 import uuid
 import zlib
 
-from kent import __version__
-
 from flask import Flask, request, render_template
+
+from kent import __version__
 
 
 dictConfig(
@@ -42,8 +42,22 @@ class Error:
     # sentry-sdk
     payload: Union[dict, bytes]
 
-    def get_timestamp(self):
+    @property
+    def summary(self):
+        if not self.payload or not isinstance(self.payload, dict):
+            return "no summary"
+
+        exceptions = self.payload.get("exception", {}).get("values", [])
+        if exceptions:
+            first = exceptions[0]
+            return f"{first['type']}: {first['value']}"
+
+        return "no summary"
+
+    @property
+    def timestamp(self):
         if self.payload and isinstance(self.payload, dict):
+            # NOTE(willkg): timestamp is a string
             return self.payload.get("timestamp", "none")
 
         return "none"

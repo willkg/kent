@@ -12,8 +12,8 @@ test:  ## Run tests and static typechecking
 
 .PHONY: lint
 lint:  ## Lint and black reformat files
-	black --target-version=py37 --line-length=88 src tests setup.py
-	flake8 src
+	black --target-version=py37 --line-length=88 bin src tests setup.py
+	flake8 bin src tests setup.py
 
 .PHONY: clean
 clean:  ## Clean build artifacts

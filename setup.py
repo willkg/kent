@@ -28,6 +28,7 @@ EXTRAS_REQUIRE = {
         "black==22.3.0",
         "flake8==4.0.1",
         "pytest==7.1.1",
+        "requests",
         "sentry-sdk==1.5.8",
         "tox==3.24.5",
         "tox-gh-actions==2.9.1",
