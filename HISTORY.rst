@@ -2,6 +2,17 @@
 HISTORY
 =======
 
+0.5.0 (June 13th, 2022)
+=======================
+
+Fixes:
+
+* Maintenance: Update pico.css to 1.5.3.
+* Feature: Add Summary column. (#27)
+
+Kent munched on popcorn quietly.
+
+
 0.4.1 (March 29th, 2022)
 ========================
 
@@ -20,7 +31,7 @@ Fixes:
 * Bug: Fix handling so Kent works with raven-python which was deprecated many
   moons ago.
 
-Kent handled me a cookie.
+Kent handed me a cookie.
 
 
 0.3.0 (January 19th, 2022)

@@ -6,6 +6,11 @@ help:
 	@echo "Available rules:"
 	@fgrep -h "##" Makefile | fgrep -v fgrep | sed 's/\(.*\):.*##/\1:  /'
 
+.PHONY: build
+build: clean lint test  ## Build sdist and wheel for distribution
+	check-manifest
+	python -m build
+
 .PHONY: test
 test:  ## Run tests and static typechecking
 	tox
