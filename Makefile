@@ -10,6 +10,12 @@ help:
 build: clean lint test  ## Build sdist and wheel for distribution
 	check-manifest
 	python -m build
+	echo ""
+	echo "Run: git tag -s TAGNAME"
+	echo ""
+	echo "Run: twine upload -r kent dist/*"
+	echo ""
+	echo "Push tag to GitHub."
 
 .PHONY: test
 test:  ## Run tests and static typechecking

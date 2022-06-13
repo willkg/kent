@@ -138,18 +138,24 @@ Release process
 3. Run::
 
       $ make checkrot
+      $ make lint
       $ make test
       $ make testdocker
       $ check-manifest
 
    Fix any issues from that.
+
 4. Update ``HISTORY.rst``.
 5. Push any changes to GitHub.
-6. Release::
+6. Build::
 
-      $ git tag --sign 1.0.0
+      $ make build
+
+7. If that goes well, then release::
+
+      $ git tag --sign VERSION
+
       # Use contents from HISTORY.rst for tag comment
+      # Push tag to GitHub
 
-      $ make clean
-      $ python setup.py sdist bdist_wheel
-      $ twine upload dist/*
+      $ twine upload -r kent dist/*
