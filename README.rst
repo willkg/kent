@@ -51,7 +51,7 @@ Running in a Docker container
 
 I'm using something like this::
 
-    FROM python:3.10.1-alpine3.15
+    FROM python:3.10.5-alpine3.16
 
     WORKDIR /app/
 
