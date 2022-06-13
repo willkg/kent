@@ -14,19 +14,28 @@ def client():
 
 class TestError:
     @pytest.mark.parametrize(
-        "payload, expected", [
+        "payload, expected",
+        [
             # Empty error payload
             ({}, "no summary"),
             # Error payload for an exception
             (
-                {"exception": {"values": [{"type": "Exception", "value": "Intentional exception"}]}},
-                "Exception: Intentional exception"
+                {
+                    "exception": {
+                        "values": [
+                            {"type": "Exception", "value": "Intentional exception"}
+                        ]
+                    }
+                },
+                "Exception: Intentional exception",
             ),
-        ]
+        ],
     )
     def test_summary(self, payload, expected):
         error = Error(
-            project_id="0", error_id="9884b351-1e8f-4a28-8a9a-fc0033467e4e", payload=payload
+            project_id="0",
+            error_id="9884b351-1e8f-4a28-8a9a-fc0033467e4e",
+            payload=payload,
         )
         assert error.summary == expected
 

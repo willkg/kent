@@ -26,6 +26,7 @@ INSTALL_REQUIRES = ["flask>=2.1.0,<3"]
 EXTRAS_REQUIRE = {
     "dev": [
         "black==22.3.0",
+        "build==0.8.0",
         "flake8==4.0.1",
         "pytest==7.1.1",
         "requests",
