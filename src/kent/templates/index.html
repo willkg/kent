@@ -6,7 +6,7 @@
 
     <title>Kent: Fake Sentry</title>
     <link rel="icon" type="image/png" href="/static/favicon.ico" />
-    <link rel="stylesheet" type="text/css" href="/static/pico.1.4.3.min.css" />
+    <link rel="stylesheet" type="text/css" href="/static/pico.1.5.3.min.css" />
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
     <script>
       function flush() {
@@ -33,18 +33,20 @@
           <a href="#" onClick ="javascript:flush()">[Flush]</a>
         </p>
         {% if errors %}
-          <table class="summary">
+          <table class="summary" role="grid">
             <thead>
-              <th>timestamp</th>
-              <th>project: event id</th>
-              <th>summary</th>
+              <tr>
+                <th scope="col">timestamp</th>
+                <th scope="col">project: event id</th>
+                <th scope="col">summary</th>
+              </tr>
             </thead>
             <tbody>
               {% for error in errors %}
                 <tr>
-                  <td>{{ error.timestamp }}</td>
-                  <td class="nowrap"><a href="/api/error/{{ error.error_id }}">{{ error.project_id }}: {{ error.error_id }}</a></td>
-                  <td>{{ error.summary }}</td>
+                  <td scope="row"><small>{{ error.timestamp }}</small></td>
+                  <td class="nowrap"><small><a href="/api/error/{{ error.error_id }}">{{ error.project_id }}: {{ error.error_id }}</a><small></td>
+                  <td><small>{{ error.summary }}</small></td>
                 </tr>
               {% endfor %}
             </tbody>

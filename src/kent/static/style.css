@@ -5,7 +5,3 @@
 th, td {
     vertical-align: top;
 }
-
-table.summary th, table.summary td {
-    font-size: 0.8em;
-}
