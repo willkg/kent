@@ -2,6 +2,18 @@
 HISTORY
 =======
 
+1.0.0 (November 9th, 2022)
+==========================
+
+Fixes:
+
+* Feature: Rework logging to be more helpful. (#32)
+* Maintenance: Redid dev requirements.
+* Feature: Support Python 3.11. (#33)
+
+Kent is building a bird house and asked me for my popsicle stick.
+
+
 0.5.0 (June 13th, 2022)
 =======================
 
