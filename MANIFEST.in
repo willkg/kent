@@ -2,6 +2,7 @@ include Makefile
 include tox.ini
 include *.rst
 include Dockerfile
+include requirements-dev.txt
 recursive-include bin *.py
 recursive-include src *.css
 recursive-include src *.html
