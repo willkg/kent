@@ -51,7 +51,7 @@ Running in a Docker container
 
 I'm using something like this::
 
-    FROM python:3.10.5-alpine3.16
+    FROM python:3.10.8-alpine3.16
 
     WORKDIR /app/
 
@@ -59,7 +59,7 @@ I'm using something like this::
         PYTHONDONTWRITEBYTECODE=1
 
     RUN pip install -U 'pip>=8' && \
-        pip install --no-cache-dir 'kent==VERSION'
+        pip install --no-cache-dir 'kent==<VERSION>'
 
     USER guest
 
@@ -67,13 +67,13 @@ I'm using something like this::
     CMD ["run"]
 
 
-Replace ``VERSION`` with the version of Kent you want to use. See
+Replace ``<VERSION>`` with the version of Kent you want to use. See
 https://pypi.org/project/kent for releases.
 
 Then::
 
-    $ docker build -t faksentry:latest .
-    $ docker run --rm --publish 8000:8000 fakesentry:latest run --host 0.0.0.0 --port 8000
+    $ docker build -t kent:latest .
+    $ docker run --init --rm --publish 8000:8000 kent:latest run --host 0.0.0.0 --port 8000
 
 
 Things to know about Kent
@@ -81,6 +81,8 @@ Things to know about Kent
 
 Kent is the fakest of fake Sentry servers. You can set up a Sentry DSN to point
 to Kent and have your application send errors to it.
+
+Kent is for testing sentry-sdk things. Kent is not for testing Relay.
 
 Kent is a refined fake Sentry service and doesn't like fast food.
 

@@ -37,11 +37,11 @@ clean:  ## Clean build artifacts
 checkrot:  ## Check package rot for dev dependencies
 	python -m venv ./tmpvenv/
 	./tmpvenv/bin/pip install -U pip
-	./tmpvenv/bin/pip install '.[dev]'
+	./tmpvenv/bin/pip install -r requirements-dev.txt
 	./tmpvenv/bin/pip list -o
 	rm -rf ./tmpvenv/
 
 .PHONY: testdocker
 testdocker:  ## Build Docker image and run it
-	docker build --no-cache -t fakesentry:latest .
-	docker run --rm --publish 5000:5000 fakesentry:latest run --host 0.0.0.0 --port 5000
+	docker build --no-cache -t kent:latest .
+	docker run --init --rm --publish 5000:5000 kent:latest run --host 0.0.0.0 --port 5000
