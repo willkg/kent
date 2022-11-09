@@ -127,7 +127,7 @@ Install
 -------
 
 1. ``mkvirtualenv kent``
-2. ``pip install -e '.[dev]'``
+2. ``pip install -r requirements-dev.txt``
 
 
 Release process
