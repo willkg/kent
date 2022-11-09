@@ -4,6 +4,7 @@ PROJECT=kent
 .PHONY: help
 help:
 	@echo "Available rules:"
+	@echo ""
 	@fgrep -h "##" Makefile | fgrep -v fgrep | sed 's/\(.*\):.*##/\1:  /'
 
 .PHONY: build
@@ -24,7 +25,7 @@ test:  ## Run tests and static typechecking
 .PHONY: lint
 lint:  ## Lint and black reformat files
 	black --target-version=py37 --line-length=88 bin src tests setup.py
-	flake8 bin src tests setup.py
+	tox -e py38-lint
 
 .PHONY: clean
 clean:  ## Clean build artifacts
