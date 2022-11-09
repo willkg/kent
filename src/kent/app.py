@@ -7,6 +7,7 @@ import gzip
 import json
 import logging
 from logging.config import dictConfig
+import os
 from typing import Union
 import uuid
 import zlib
@@ -19,10 +20,16 @@ from kent import __version__
 dictConfig(
     {
         "version": 1,
+        "formatters": {
+            "default": {
+                "format": "[%(asctime)s] %(levelname)s: %(module)s: %(message)s",
+            }
+        },
         "handlers": {
             "wsgi": {
                 "class": "logging.StreamHandler",
                 "stream": "ext://flask.logging.wsgi_errors_stream",
+                "formatter": "default",
             },
         },
         "root": {
@@ -77,8 +84,7 @@ class ErrorManager:
         # List of Error instances
         self.errors = []
 
-    def add_error(self, project_id, payload):
-        error_id = str(uuid.uuid4())
+    def add_error(self, error_id, project_id, payload):
         error = Error(project_id=project_id, error_id=error_id, payload=payload)
         self.errors.append(error)
 
@@ -101,7 +107,28 @@ class ErrorManager:
 ERRORS = ErrorManager()
 
 
+INTERESTING_HEADERS = [
+    "User-Agent",
+    "X-Sentry-Auth",
+]
+
+
+def deep_get(path, structure, default=None):
+    node = structure
+    for part in path.split("."):
+        if part.startswith("["):
+            index = int(part[1:-1])
+            node = node[index]
+        elif part in node:
+            node = node[part]
+        else:
+            return default
+    return node
+
+
 def create_app(test_config=None):
+    dev_mode = os.environ.get("KENT_DEV", "0") == "1"
+
     # Always start an app with an empty error manager
     ERRORS.flush()
 
@@ -144,8 +171,14 @@ def create_app(test_config=None):
 
     @app.route("/api/<int:project_id>/store/", methods=["POST"])
     def store_view(project_id):
-        for key, val in request.headers.items():
-            app.logger.info(f"{key}: {val}")
+        # Log headers
+        if dev_mode:
+            for key, val in request.headers.items():
+                app.logger.info(f"header: {key}: {val!r}")
+        else:
+            for key in INTERESTING_HEADERS:
+                if key in request.headers:
+                    app.logger.info(f"{key}: {request.headers[key]}")
 
         # Decompress it
         if request.headers.get("content-encoding") == "gzip":
@@ -162,9 +195,31 @@ def create_app(test_config=None):
             app.logger.exception("exception when JSON-decoding body.")
             app.logger.error(body)
             body = {"error": "Kent could not decode body; see logs"}
+            raise
 
-        if body:
-            ERRORS.add_error(project_id=project_id, payload=body)
+        error_id = str(uuid.uuid4())
+        ERRORS.add_error(error_id=error_id, project_id=project_id, payload=body)
+
+        # Log interesting bits in the botdy
+        app.logger.info("project id: %s", project_id)
+        app.logger.info("event id: %s", error_id)
+        if "exception" in body:
+            app.logger.info(
+                "exception: %s %s",
+                deep_get("exception.values.[0].type", body),
+                deep_get("exception.values.[0].value", body),
+            )
+        if "message" in body:
+            app.logger.info("message: %s", deep_get("message", body))
+        app.logger.info(
+            "sdk: %s %s", deep_get("sdk.name", body), deep_get("sdk.version", body)
+        )
+        app.logger.info(
+            "event url: %s://%s/api/error/%s",
+            request.scheme,
+            request.headers["host"],
+            error_id,
+        )
 
         return {"success": True}
 
