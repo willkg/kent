@@ -17,9 +17,9 @@ def mock_get_interface_ip(family):
     # you're running it in a docker container, it picks up the ip address of
     # the container which is really unhelpful.
     if family == socket.AF_INET:
-        return "localhost"
+        return "0.0.0.0"
     if family == socket.AF_INET6:
-        return "::1"
+        return "::"
 
 
 serving.get_interface_ip = mock_get_interface_ip
