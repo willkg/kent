@@ -130,34 +130,3 @@ Install
 
 1. ``mkvirtualenv kent``
 2. ``pip install -r requirements-dev.txt``
-
-
-Release process
----------------
-
-1. Check out main tip.
-2. Update ``__version__`` in ``src/kent/__init__.py``.
-3. Run::
-
-      $ make checkrot
-      $ make lint
-      $ make test
-      $ make testdocker
-      $ check-manifest
-
-   Fix any issues from that.
-
-4. Update ``HISTORY.rst``.
-5. Push any changes to GitHub.
-6. Build::
-
-      $ make build
-
-7. If that goes well, then release::
-
-      $ git tag --sign VERSION
-
-      # Use contents from HISTORY.rst for tag comment
-      # Push tag to GitHub
-
-      $ twine upload -r kent dist/*
