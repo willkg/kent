@@ -24,7 +24,7 @@ test:  ## Run tests and static typechecking
 
 .PHONY: lint
 lint:  ## Lint and black reformat files
-	black --target-version=py37 --line-length=88 bin src tests setup.py
+	black src tests setup.py
 	tox -e py38-lint
 
 .PHONY: clean
