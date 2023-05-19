@@ -1,0 +1,27 @@
+name: build
+on:
+  push:
+    tags: ['*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v2
+
+      - name: login to docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: build, tag and push docker image to docker hub
+        run: |
+          BUILD=${GITHUB_REF#refs/*/}
+
+          docker build -t willkg/kent:$BUILD .
+          docker push willkg/kent:$BUILD
+
+          docker tag willkg/kent:$BUILD willkg/kent:latest
+          docker push willkg/kent:latest
