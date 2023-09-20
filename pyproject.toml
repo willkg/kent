@@ -6,7 +6,7 @@ select = ["E", "F", "B"]
 line-length = 88
 ignore = ["E501"]
 
-target-version = "py37"
+target-version = "py38"
 
 src = ["src", "tests"]
 
@@ -16,7 +16,7 @@ docstring-quotes = "double"
 
 [tool.black]
 line-length = 88
-target-version = ["py37"]
+target-version = ["py38"]
 
 
 [tool.pytest.ini_options]
@@ -34,16 +34,14 @@ filterwarnings = [
 legacy_tox_ini = """
 [tox]
 envlist =
-    py37
-    py37-lint
     py38
+    py38-lint
     py39
     py310
     py311
 
 [gh-actions]
 python =
-    3.7: py37
     3.8: py38
     3.9: py39
     3.10: py310
@@ -54,8 +52,8 @@ deps = -rrequirements-dev.txt
 commands =
     pytest {posargs} tests/
 
-[testenv:py37-lint]
-basepython = python3.7
+[testenv:py38-lint]
+basepython = python3.8
 changedir = {toxinidir}
 commands =
     black --check bin src tests setup.py
