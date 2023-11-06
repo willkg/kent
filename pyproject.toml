@@ -1,3 +1,53 @@
+[project]
+name = "kent"
+description = "Fake Sentry service for debugging and integration tests"
+version = "1.0.0"
+readme = "README.rst"
+keywords = ["sentry", "integration service", "test"]
+authors = [{name = "Will Kahn-Greene"}]
+license = {text = "MPLv2"}
+requires-python = ">=3.8"
+dependencies = ["flask>=2.1.0,<3"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+urls.Homepage = "https://github.com/willkg/kent/"
+urls.Source = "https://github.com/willkg/kent/"
+urls.Issues = "https://github.com/willkg/kent/issues"
+
+[project.scripts]
+kent-server = "kent.cli_server:main"
+kent-testpost = "kent.cli_testpost:main"
+
+[project.optional-dependencies]
+dev = [
+    "black",
+    "build",
+    "pytest",
+    "requests",
+    "ruff",
+    "sentry-sdk",
+    "setuptools",
+    "tox",
+    "tox-gh-actions",
+    "twine",
+]
+
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+
 [tool.ruff]
 # Enable pycodestyle (E), pyflakes (F), and bugbear (B) rules
 select = ["E", "F", "B"]
@@ -33,6 +83,7 @@ filterwarnings = [
 [tool.tox]
 legacy_tox_ini = """
 [tox]
+isolated_build = True
 envlist =
     py38
     py38-lint
@@ -50,14 +101,13 @@ python =
     3.12: py312
 
 [testenv]
-deps = -rrequirements-dev.txt
-commands =
-    pytest {posargs} tests/
+extras = dev
+commands = pytest {posargs} tests/
 
 [testenv:py38-lint]
 basepython = python3.8
 changedir = {toxinidir}
 commands =
-    black --check bin src tests setup.py
-    ruff bin src tests setup.py
+    black --diff bin src tests
+    ruff bin src tests
 """
