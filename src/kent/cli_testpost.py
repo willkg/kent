@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+import logging
 from urllib.parse import urlparse
 import sys
 
@@ -28,11 +29,15 @@ def main():
         "kind",
         nargs="?",
         default="message",
-        help="What kind of thing to post. ['message', 'error', 'security']",
+        help=(
+            "What kind of thing to post. ['message', 'error', 'loggingerror', "
+            + "'security']"
+        ),
     )
 
     args = parser.parse_args()
 
+    logging.basicConfig(level=logging.ERROR)
     init(args.dsn)
 
     if args.kind == "message":
@@ -41,9 +46,16 @@ def main():
 
     elif args.kind == "error":
         try:
-            raise Exception
+            raise Exception("intentional exception")
         except Exception as exc:
             capture_exception(exc)
+        print(f"Error posted to: {args.dsn}")
+
+    elif args.kind == "loggingerror":
+        try:
+            raise Exception("intentional exception")
+        except Exception:
+            logging.exception("intentional exception")
         print(f"Error posted to: {args.dsn}")
 
     elif args.kind == "security":
