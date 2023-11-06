@@ -1,7 +1,7 @@
 [project]
 name = "kent"
 description = "Fake Sentry service for debugging and integration tests"
-version = "1.0.0"
+version = "1.1.0"
 readme = "README.rst"
 keywords = ["sentry", "integration service", "test"]
 authors = [{name = "Will Kahn-Greene"}]
