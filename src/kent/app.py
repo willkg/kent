@@ -54,10 +54,16 @@ class Error:
         if not self.payload or not isinstance(self.payload, dict):
             return "no summary"
 
+        # Sentry exceptions events
         exceptions = self.payload.get("exception", {}).get("values", [])
         if exceptions:
             first = exceptions[0]
             return f"{first['type']}: {first['value']}"
+
+        # Sentry message
+        msg = self.payload.get("message", None)
+        if msg:
+            return msg
 
         return "no summary"
 
@@ -225,6 +231,35 @@ def create_app(test_config=None):
             error_id,
             deep_get("sdk.name", body),
             deep_get("sdk.version", body),
+        )
+
+        return {"success": True}
+
+    @app.route("/api/<int:project_id>/security/", methods=["POST"])
+    def security_view(project_id):
+        error_id = str(uuid.uuid4())
+        log_headers(dev_mode, error_id, request.headers)
+
+        body = request.data
+
+        # Decode the JSON payload
+        try:
+            json_body = json.loads(body)
+        except Exception:
+            app.logger.exception("%s: exception when JSON-decoding body.", error_id)
+            app.logger.error("%s: %s", error_id, body)
+            body = {"error": "Kent could not decode body; see logs"}
+            raise
+
+        ERRORS.add_error(error_id=error_id, project_id=project_id, payload=json_body)
+
+        # Log something to output
+        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
+        app.logger.info(
+            "%s: security report: project id: %s, event url: %s",
+            error_id,
+            project_id,
+            event_url,
         )
 
         return {"success": True}
