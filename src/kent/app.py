@@ -51,19 +51,41 @@ class Error:
 
     @property
     def summary(self):
-        if not self.payload or not isinstance(self.payload, dict):
+        if not self.payload:
             return "no summary"
 
-        # Sentry exceptions events
-        exceptions = self.payload.get("exception", {}).get("values", [])
-        if exceptions:
-            first = exceptions[0]
-            return f"{first['type']}: {first['value']}"
+        if isinstance(self.payload, dict):
+            # Sentry exceptions events
+            exceptions = self.payload.get("exception", {}).get("values", [])
+            if exceptions:
+                first = exceptions[0]
+                return f"{first['type']}: {first['value']}"
 
-        # Sentry message
-        msg = self.payload.get("message", None)
-        if msg:
-            return msg
+            # Sentry message
+            msg = self.payload.get("message", None)
+            if msg:
+                return msg
+
+            # CSP security report (older browsers)
+            if "csp-report" in self.payload:
+                directive = self.payload["csp-report"].get(
+                    "violated-directive", "unknown"
+                )
+                summary = f"csp-report: {directive}"
+                return summary
+
+        elif isinstance(self.payload, list):
+            # CSP security report (newer browsers)
+            if self.payload[0].get("type") == "csp-violation":
+                directives = []
+                for section in self.payload:
+                    directives.append(
+                        section.get("body", {}).get("effectiveDirective", "unknown")
+                    )
+
+                all_directives = ", ".join(directives)
+                summary = f"csp-report: {all_directives}"
+                return summary
 
         return "no summary"
 
