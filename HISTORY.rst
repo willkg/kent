@@ -2,6 +2,22 @@
 HISTORY
 =======
 
+1.1.0 (November 6th, 2023)
+==========================
+
+Changes:
+
+* Feature: Support Python 3.12. (#50)
+* Maintenance: Switch everything to ``pyproject.toml`` (#62)
+* Feature: Add ``loggingerror`` to testpost command (#48)
+* Maintenance: Drop support for Python 3.7. (#49)
+* Feature: Rework app logging. All lines are now prefixed with the error id to
+  make tracing easier.
+* Feature: Add support for security reports like CSP security reports. (#59)
+
+Kent wants to know if the sky is green sometimes.
+
+
 1.0.0 (November 9th, 2022)
 ==========================
 
