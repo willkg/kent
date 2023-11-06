@@ -24,7 +24,7 @@ test:  ## Run tests and static typechecking
 
 .PHONY: lint
 lint:  ## Lint and black reformat files
-	black src tests setup.py
+	black bin src tests
 	tox -e py38-lint
 
 .PHONY: clean
