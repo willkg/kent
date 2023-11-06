@@ -169,16 +169,22 @@ def create_app(test_config=None):
         ERRORS.flush()
         return {"success": True}
 
-    @app.route("/api/<int:project_id>/store/", methods=["POST"])
-    def store_view(project_id):
+    def log_headers(dev_mode, error_id, headers):
         # Log headers
         if dev_mode:
-            for key, val in request.headers.items():
-                app.logger.info(f"header: {key}: {val!r}")
+            for key, val in headers.items():
+                app.logger.info("%s: header: %s: %s", error_id, key, val)
         else:
             for key in INTERESTING_HEADERS:
-                if key in request.headers:
-                    app.logger.info(f"{key}: {request.headers[key]}")
+                if key in headers:
+                    app.logger.info(
+                        "%s: header: %s: %s", error_id, key, request.headers[key]
+                    )
+
+    @app.route("/api/<int:project_id>/store/", methods=["POST"])
+    def store_view(project_id):
+        error_id = str(uuid.uuid4())
+        log_headers(dev_mode, error_id, request.headers)
 
         # Decompress it
         if request.headers.get("content-encoding") == "gzip":
@@ -192,33 +198,33 @@ def create_app(test_config=None):
         try:
             body = json.loads(body)
         except Exception:
-            app.logger.exception("exception when JSON-decoding body.")
-            app.logger.error(body)
+            app.logger.exception("%s: exception when JSON-decoding body.", error_id)
+            app.logger.error("%s: %s", error_id, body)
             body = {"error": "Kent could not decode body; see logs"}
             raise
 
-        error_id = str(uuid.uuid4())
         ERRORS.add_error(error_id=error_id, project_id=project_id, payload=body)
 
         # Log interesting bits in the botdy
-        app.logger.info("project id: %s", project_id)
-        app.logger.info("event id: %s", error_id)
+        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
+        app.logger.info(
+            "%s: error: project id: %s, event url: %s", error_id, project_id, event_url
+        )
+
         if "exception" in body:
             app.logger.info(
-                "exception: %s %s",
+                "%s: exception: %s %s",
+                error_id,
                 deep_get("exception.values.[0].type", body),
                 deep_get("exception.values.[0].value", body),
             )
         if "message" in body:
-            app.logger.info("message: %s", deep_get("message", body))
+            app.logger.info("%s: message: %s", error_id, deep_get("message", body))
         app.logger.info(
-            "sdk: %s %s", deep_get("sdk.name", body), deep_get("sdk.version", body)
-        )
-        app.logger.info(
-            "event url: %s://%s/api/error/%s",
-            request.scheme,
-            request.headers["host"],
+            "%s: sdk: %s %s",
             error_id,
+            deep_get("sdk.name", body),
+            deep_get("sdk.version", body),
         )
 
         return {"success": True}
