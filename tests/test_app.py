@@ -29,6 +29,13 @@ class TestError:
                 },
                 "Exception: Intentional exception",
             ),
+            # Message payload
+            (
+                {
+                    "message": "some message",
+                },
+                "some message",
+            ),
         ],
     )
     def test_summary(self, payload, expected):
@@ -47,6 +54,11 @@ def test_index_view(client):
 
 def test_store_view(client):
     resp = client.post("/api/1/store/", json={"id": "xyz"})
+    assert resp.status_code == 200
+
+
+def test_security_view(client):
+    resp = client.post("/api/1/security/", json=[{"id": "xyz"}])
     assert resp.status_code == 200
 
 
