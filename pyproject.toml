@@ -30,7 +30,6 @@ kent-testpost = "kent.cli_testpost:main"
 
 [project.optional-dependencies]
 dev = [
-    "black",
     "build",
     "pytest",
     "requests",
@@ -52,7 +51,7 @@ build-backend = "setuptools.build_meta"
 # Enable pycodestyle (E), pyflakes (F), and bugbear (B) rules
 select = ["E", "F", "B"]
 
-# Ignore line length violations--Black handles those
+# Ignore line length violations
 line-length = 88
 ignore = ["E501"]
 
@@ -62,11 +61,6 @@ src = ["src", "tests"]
 
 [tool.ruff.flake8-quotes]
 docstring-quotes = "double"
-
-
-[tool.black]
-line-length = 88
-target-version = ["py38"]
 
 
 [tool.pytest.ini_options]
@@ -108,6 +102,6 @@ commands = pytest {posargs} tests/
 basepython = python3.8
 changedir = {toxinidir}
 commands =
-    black --diff bin src tests
-    ruff bin src tests
+    ruff format --check bin src tests
+    ruff check bin src tests
 """

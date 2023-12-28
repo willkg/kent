@@ -22,9 +22,12 @@ build: clean lint test  ## Build sdist and wheel for distribution
 test:  ## Run tests and static typechecking
 	tox
 
+.PHONY: format
+format:  ## Format files
+	tox exec -e py38-lint -- ruff format
+
 .PHONY: lint
-lint:  ## Lint and black reformat files
-	black bin src tests
+lint:  ## Lint files
 	tox -e py38-lint
 
 .PHONY: clean
@@ -32,14 +35,6 @@ clean:  ## Clean build artifacts
 	rm -rf build dist src/${PROJECT}.egg-info .tox .pytest_cache
 	find src/ -name __pycache__ | xargs rm -rf
 	find src/ -name '*.pyc' | xargs rm -rf
-
-.PHONY: checkrot
-checkrot:  ## Check package rot for dev dependencies
-	python -m venv ./tmpvenv/
-	./tmpvenv/bin/pip install -U pip
-	./tmpvenv/bin/pip install -r requirements-dev.txt
-	./tmpvenv/bin/pip list -o
-	rm -rf ./tmpvenv/
 
 .PHONY: testdocker
 testdocker:  ## Build Docker image and run it
