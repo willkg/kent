@@ -4,11 +4,15 @@
 
 import os
 import socket
+import sys
+
+import kent.app
+
+from flask import cli  # noqa
+from werkzeug import serving  # noqa
+
 
 os.environ["FLASK_APP"] = "kent.app"
-
-from flask.cli import main as flask_main  # noqa
-from werkzeug import serving  # noqa
 
 
 def mock_get_interface_ip(family):
@@ -25,5 +29,22 @@ def mock_get_interface_ip(family):
 serving.get_interface_ip = mock_get_interface_ip
 
 
+# Prevent the Flask banner from showing
+cli.show_server_banner = lambda *args, **kwargs: True
+
+
+def maybe_show_banner():
+    ctx = cli.cli.make_context(info_name=None, args=sys.argv)
+    args = cli.cli.parse_args(ctx, args=sys.argv)
+    if args[0] == "run":
+        cmd = cli.cli.get_command(ctx, name="run")
+        parser = cmd.make_parser(ctx)
+        opts, _, _ = parser.parse_args(args[1:])
+        port = opts.get("port", 5000)
+        host = opts.get("host", "127.0.0.1")
+        kent.app.BANNER = f"Listening on http://{host}:{port}/"
+
+
 def main():
-    flask_main()
+    maybe_show_banner()
+    cli.main()

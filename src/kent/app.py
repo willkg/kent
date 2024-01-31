@@ -5,7 +5,6 @@
 from dataclasses import dataclass
 import gzip
 import json
-import logging
 from logging.config import dictConfig
 import os
 from typing import Union
@@ -22,7 +21,7 @@ dictConfig(
         "version": 1,
         "formatters": {
             "default": {
-                "format": "[%(asctime)s] %(levelname)s: %(module)s: %(message)s",
+                "format": "[%(asctime)s] %(levelname)s: %(name)s %(message)s",
             }
         },
         "handlers": {
@@ -32,12 +31,19 @@ dictConfig(
                 "formatter": "default",
             },
         },
+        "loggers": {
+            "kent": {"level": "INFO"},
+            "werkzeug": {"level": "ERROR"},
+        },
         "root": {
-            "level": logging.INFO,
+            "level": "INFO",
             "handlers": ["wsgi"],
         },
     }
 )
+
+
+BANNER = None
 
 
 @dataclass
@@ -166,6 +172,9 @@ def create_app(test_config=None):
     if test_config is not None:
         app.config.from_mapping(test_config)
 
+    if BANNER:
+        app.logger.info(BANNER)
+
     @app.route("/", methods=["GET"])
     def index_view():
         host = request.scheme + "://" + request.headers["host"]
@@ -181,6 +190,7 @@ def create_app(test_config=None):
 
     @app.route("/api/error/<error_id>", methods=["GET"])
     def api_error_view(error_id):
+        app.logger.info(f"GET /api/error/{error_id}")
         error = ERRORS.get_error(error_id)
         if error is None:
             return {"error": f"Error {error_id} not found"}, 404
@@ -189,11 +199,13 @@ def create_app(test_config=None):
 
     @app.route("/api/errorlist/", methods=["GET"])
     def api_error_list_view():
+        app.logger.info("GET /api/errorlist/")
         error_ids = [error.error_id for error in ERRORS.get_errors()]
         return {"errors": error_ids}
 
     @app.route("/api/flush/", methods=["POST"])
     def api_flush_view():
+        app.logger.info("POST /api/flush")
         ERRORS.flush()
         return {"success": True}
 
@@ -211,6 +223,7 @@ def create_app(test_config=None):
 
     @app.route("/api/<int:project_id>/store/", methods=["POST"])
     def store_view(project_id):
+        app.logger.info(f"POST /api/{project_id}/store/")
         error_id = str(uuid.uuid4())
         log_headers(dev_mode, error_id, request.headers)
 
@@ -224,41 +237,42 @@ def create_app(test_config=None):
 
         # If it's JSON, then decode it
         try:
-            body = json.loads(body)
+            json_body = json.loads(body)
         except Exception:
             app.logger.exception("%s: exception when JSON-decoding body.", error_id)
-            app.logger.error("%s: %s", error_id, body)
+            app.logger.error("%s: %s", error_id, json_body)
             body = {"error": "Kent could not decode body; see logs"}
             raise
 
-        ERRORS.add_error(error_id=error_id, project_id=project_id, payload=body)
+        ERRORS.add_error(error_id=error_id, project_id=project_id, payload=json_body)
 
-        # Log interesting bits in the botdy
-        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
-        app.logger.info(
-            "%s: error: project id: %s, event url: %s", error_id, project_id, event_url
-        )
-
-        if "exception" in body:
+        # Log interesting bits in the body
+        if "exception" in json_body:
             app.logger.info(
                 "%s: exception: %s %s",
                 error_id,
-                deep_get("exception.values.[0].type", body),
-                deep_get("exception.values.[0].value", body),
+                deep_get("exception.values.[0].type", json_body),
+                deep_get("exception.values.[0].value", json_body),
             )
-        if "message" in body:
-            app.logger.info("%s: message: %s", error_id, deep_get("message", body))
+        if "message" in json_body:
+            app.logger.info("%s: message: %s", error_id, deep_get("message", json_body))
         app.logger.info(
             "%s: sdk: %s %s",
             error_id,
-            deep_get("sdk.name", body),
-            deep_get("sdk.version", body),
+            deep_get("sdk.name", json_body),
+            deep_get("sdk.version", json_body),
         )
+
+        # Log event url
+        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
+        app.logger.info("%s: project id: %s", error_id, project_id)
+        app.logger.info("%s: url: %s", error_id, event_url)
 
         return {"success": True}
 
     @app.route("/api/<int:project_id>/security/", methods=["POST"])
     def security_view(project_id):
+        app.logger.info(f"POST /api/{project_id}/security/")
         error_id = str(uuid.uuid4())
         log_headers(dev_mode, error_id, request.headers)
 
@@ -275,12 +289,26 @@ def create_app(test_config=None):
 
         ERRORS.add_error(error_id=error_id, project_id=project_id, payload=json_body)
 
-        # Log something to output
-        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
+        # Log interesting bits in the body
+        for i, report in enumerate(json_body):
+            if "type" in report:
+                app.logger.info(
+                    "%s: %s: type: %s",
+                    error_id,
+                    i,
+                    report["type"],
+                )
         app.logger.info(
-            "%s: security report: project id: %s, event url: %s",
+            "%s: project id: %s",
             error_id,
             project_id,
+        )
+
+        # Log event url
+        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
+        app.logger.info(
+            "%s: url: %s",
+            error_id,
             event_url,
         )
 
