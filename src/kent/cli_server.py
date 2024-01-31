@@ -7,8 +7,7 @@ import sys
 
 import kent.app
 
-from flask import cli  # noqa
-from werkzeug import serving  # noqa
+from flask import cli
 
 
 os.environ["FLASK_APP"] = "kent.app"
@@ -27,6 +26,16 @@ def maybe_show_banner():
         opts, _, _ = parser.parse_args(args[1:])
         port = opts.get("port", 5000)
         host = opts.get("host", "127.0.0.1")
+
+        # Convert any adapter to localhost
+        if host == "0.0.0.0":
+            host = "localhost"
+        elif host == "::":
+            host = "::1"
+
+        if ":" in host:
+            host = f"[{host}]"
+
         kent.app.BANNER = f"Listening on http://{host}:{port}/"
 
 
