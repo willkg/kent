@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import socket
 import sys
 
 import kent.app
@@ -13,20 +12,6 @@ from werkzeug import serving  # noqa
 
 
 os.environ["FLASK_APP"] = "kent.app"
-
-
-def mock_get_interface_ip(family):
-    # NOTE(willkg): we do this weird thing becauwe werkzeug tries really hard
-    # to be helpful when the host is 0.0.0.0 or something like that and if
-    # you're running it in a docker container, it picks up the ip address of
-    # the container which is really unhelpful.
-    if family == socket.AF_INET:
-        return "localhost"
-    if family == socket.AF_INET6:
-        return "::1"
-
-
-serving.get_interface_ip = mock_get_interface_ip
 
 
 # Prevent the Flask banner from showing
