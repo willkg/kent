@@ -2,6 +2,17 @@
 HISTORY
 =======
 
+1.2.0 (January 31st, 2024)
+==========================
+
+Changes:
+
+* Feature: Improve logging. (#69)
+* Maintenance: Switch to ruff for formatting. (#66)
+
+Kent found a rock shaped like two rocks.
+
+
 1.1.0 (November 6th, 2023)
 ==========================
 
