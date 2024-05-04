@@ -7,7 +7,7 @@ keywords = ["sentry", "integration service", "test"]
 authors = [{name = "Will Kahn-Greene"}]
 license = {text = "MPLv2"}
 requires-python = ">=3.8"
-dependencies = ["flask>=2.1.0,<3"]
+dependencies = ["flask>3"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
