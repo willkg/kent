@@ -48,18 +48,16 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.ruff]
-# Enable pycodestyle (E), pyflakes (F), and bugbear (B) rules
-select = ["E", "F", "B"]
-
-# Ignore line length violations
 line-length = 88
-ignore = ["E501"]
-
 target-version = "py38"
-
 src = ["src", "tests"]
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint]
+# Enable pycodestyle (E), pyflakes (F), and bugbear (B) rules
+select = ["E", "F", "B"]
+ignore = ["E501"]
+
+[tool.ruff.lint.flake8-quotes]
 docstring-quotes = "double"
 
 
