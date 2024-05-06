@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import argparse
+from importlib.metadata import version as metadata_version
 import logging
 from urllib.parse import urlparse
 import sys
@@ -40,6 +41,8 @@ def main():
     logging.basicConfig(level=logging.ERROR)
     init(args.dsn)
 
+    print(f"DSN: {args.dsn}")
+    print(f"Sentry-sdk version: {metadata_version('sentry_sdk')}")
     if args.kind == "message":
         capture_message("test error capture")
         print(f"Message posted to: {args.dsn}")
@@ -69,6 +72,7 @@ def main():
 
         if args.kind == "security_csp_new":
             # Newer browsers send this structure
+            # From: https://w3c.github.io/reporting/#sample-reports
             data = [
                 {
                     "age": 0,

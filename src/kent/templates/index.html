@@ -27,12 +27,12 @@
           <h2>A fake Sentry server for debugging and integration tests</h2>
         </hgroup>
 
-        <h2>Errors</h2>
+        <h2>Events</h2>
         <p>
-          There are {{ errors|count }} errors in memory.
+          There are {{ events|count }} events in memory.
           <a href="#" onClick ="javascript:flush()">[Flush]</a>
         </p>
-        {% if errors %}
+        {% if events %}
           <table class="summary" role="grid">
             <thead>
               <tr>
@@ -42,11 +42,11 @@
               </tr>
             </thead>
             <tbody>
-              {% for error in errors %}
+              {% for event in events %}
                 <tr>
-                  <td scope="row"><small>{{ error.timestamp }}</small></td>
-                  <td class="nowrap"><small><a href="/api/error/{{ error.error_id }}">{{ error.project_id }}: {{ error.error_id }}</a><small></td>
-                  <td><small>{{ error.summary }}</small></td>
+                  <td scope="row"><small>{{ event.timestamp }}</small></td>
+                  <td class="nowrap"><small><a href="/api/event/{{ event.event_id }}">{{ event.project_id }}: {{ event.event_id }}</a><small></td>
+                  <td><small>{{ event.summary }}</small></td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -65,65 +65,65 @@
               <p><code>GET {{ dsn }}</code></p>
               <p>Returns no payload.</p>
               <p>
-                If you're running this in a Docker container and the
-                service you want sending errors to Fake Sentry is in another
-                Docker container, then you will need to use the appropriate
-                host for the service.
+                If you're running this in a Docker container and the service
+                you want sending errors to Fake Sentry is in another Docker
+                container, then you will need to use the appropriate host for
+                the service.
               </p>
             </td>
           </tr>
           <tr>
-            <td class="nowrap">Error list</td>
+            <td class="nowrap">Event list</td>
             <td>
-              <p><code>GET {{ host }}/api/errorlist/</code></p>
+              <p><code>GET {{ host }}/api/eventlist/</code></p>
               <p>Returns JSON payload.</p>
               <dl>
-                <dt><code>errors</code></dt>
-                <dd>List of error ids as strings.</dd>
+                <dt><code>events</code></dt>
+                <dd>List of event structures containing the event id, project id, and summary.</dd>
               </dl>
               <p>Example:</p>
-<pre><code>{
-  "errors": [
-    "f2edba96-0433-47e0-af86-ecfbbb16a544",
-    "1a45b81f-5960-4174-9945-7fe9a8285d90
-  ]
-}</code></pre>
+<pre><code>curl http://localhost:5000/api/eventlist/
+{"events":[{"event_id":"1b1211bb-a113-480c-a3c9-0c7e7aea5e27","project_id":1,"summary":"test error capture"}]}
+</code></pre>
             </td>
           </tr>
           <tr>
-            <td class="nowrap">Error</td>
+            <td class="nowrap">Event</td>
             <td>
-              <p><code>GET {{ host }}/api/error/&lt;ERRORID&gt;</code></p>
+              <p><code>GET {{ host }}/api/event/&lt;EVENT_ID&gt;</code></p>
               <p>Returns JSON payload.</p>
               <dl>
                 <dt><code>project_id</code></dt>
                 <dd>Project id as an int</dd>
-                <dt><code>error_id</code></dt>
-                <dd>Error id as a string</dd>
+                <dt><code>event_id</code></dt>
+                <dd>Event id as a string</dd>
                 <dt><code>payload</code></dt>
-                <dd>Error payload sent by the sentry-sdk</dd>
+                <dd>Event payload sent by the sentry-sdk</dd>
               </dl>
               <p>Contrived example:</p>
-<pre><code>{
-  "project_id": 1,
-  "error_id": "f2edba96-0433-47e0-af86-ecfbbb16a544",
-  "payload": {
-    whatever sentry-sdk sent here
-  }
-}</code></pre>
+<pre><code>curl http://localhost:5000/api/event/1f54272a-8cd6-45c9-8cf9-a06d844ec293
+{"event_id":"1f54272a-8cd6-45c9-8cf9-a06d844ec293","payload":{"body":{"breadcrumbs":{"values":[]},"contexts":{"runtime":{"build":"3.10.14 (main, May  6 2024, 10:26:19) [GCC 13.2.0]","name":"CPython","version":"3.10.14"},"trace":{"parent_span_id":null,"span_id":"bb4b07d835a10c3e","trace_id":"99ec1fa063a141e0bb514fd9bbb57c54"}},"environment":"production","event_id":"753b3e32cd2c471c9480444e7fd12897","extra":{"sys.argv":["/home/willkg/venvs/kent/bin/kent-testpost","message"]},"level":"info","message":"test error capture","modules":{"blinker":"1.8.2","certifi":"2024.2.2","charset-normalizer":"3.3.2","click":"8.1.7","flask":"3.0.3","idna":"3.7","itsdangerous":"2.2.0","jinja2":"3.1.4","kent":"1.2.0","markupsafe":"2.1.5","pip":"24.0","requests":"2.31.0","sentry-sdk":"1.45.0","setuptools":"69.5.1","urllib3":"2.2.1","werkzeug":"3.0.3","wheel":"0.43.0"},"platform":"python","release":"96ed17acbc96f2af558a2989025b5acaa994c511","sdk":{"integrations":["argv","atexit","dedupe","excepthook","flask","logging","modules","stdlib","threading"],"name":"sentry.python.flask","packages":[{"name":"pypi:sentry-sdk","version":"1.45.0"}],"version":"1.45.0"},"server_name":"saturn7","timestamp":"2024-05-19T01:02:09.184703Z","transaction_info":{}},"envelope_header":null,"header":null},"project_id":1}
+</code></pre>
+              <p>
+                The payload data depends on which version of sentry-sdk
+                you're using and how it submitted the data.
+              </p>
             </td>
           </tr>
           <tr>
-            <td class="nowrap">Flush errors</td>
+            <td class="nowrap">Flush events</td>
             <td>
               <p><code>POST {{ host }}/api/flush/</code></p>
               <p>Returns JSON payload.</p>
+              <p>HTTP 200</p>
               <dl>
                   <dt><code>success</code></dt>
                   <dd><i>true</i> if successful</dd>
               </dl>
               <p>Example:</p>
-<pre><code>{"success": true}</code></pre>
+<pre><code>curl -X POST http://localhost:5000/api/flush/
+{"success": true}
+</code></pre>
           </tr>
         </table>
       </main>
