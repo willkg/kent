@@ -2,6 +2,40 @@
 HISTORY
 =======
 
+2.0.0 (In development)
+======================
+
+Backwards incompatible changes:
+
+* Changed ``/api/errorlist/`` to ``/api/eventlist/`` and changed response
+  to a list of JSON objects with "error_id", "project_id", and "summary"
+  keys.
+
+  Example::
+
+      curl http://localhost:5000/api/eventlist/
+      {"events":[{"event_id":"1b1211bb-a113-480c-a3c9-0c7e7aea5e27","project
+      _id":1,"summary":"test error capture"}]}
+
+* Changed ``/api/error/ERROR_ID/`` to ``/api/event/EVENT_ID/`` and changed
+  response so that the payload is now a JSON object with "envelope_header",
+  "header", and "body" keys.
+
+  If the event was captured using the ``store`` API, then "envelope_header" and
+  "header" will be nulls and "body" will contain the payload.
+
+  If the event was captured using the ``envelope`` API, then "envelope_header"
+  will be the payload envelope header, "header" will be the item header, and
+  "body" will be the item.
+
+Changes:
+
+* Feature: Support ``envelope`` API. (#42)
+* Maintenance: Update to Flask 3. (#73)
+
+Kent quietly stares off into the distance.
+
+
 1.2.0 (January 31st, 2024)
 ==========================
 

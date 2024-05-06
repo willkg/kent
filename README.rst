@@ -16,7 +16,7 @@ Goals of Kent:
 
 1. make it possible to debug ``before_send`` and ``before_breadcrumb``
    sanitization code when using sentry-sdk
-2. make it possible to debug other sentry error submission payload issues
+2. make it possible to debug other sentry event submission payload issues
 3. make it possible to write integration tests against a fake sentry instance
 
 
@@ -85,7 +85,7 @@ Things to know about Kent
 =========================
 
 Kent is the fakest of fake Sentry servers. You can set up a Sentry DSN to point
-to Kent and have your application send errors to it.
+to Kent and have your application send events to it.
 
 Kent is for testing sentry-sdk things. Kent is not for testing Relay.
 
@@ -94,28 +94,28 @@ Kent is a refined fake Sentry service and doesn't like fast food.
 Kent will keep track of the last 100 payloads it received in memory. Nothing is
 persisted to disk.
 
-You can access the list of errors and error data with your web browser by going
+You can access the list of events and event data with your web browser by going
 to Kent's index page.
 
 You can also access it with the API. This is most useful for integration tests
-that want to assert things about errors.
+that want to assert things about events.
 
-``GET /api/errorlist/``
-    List of all errors in memory with a unique error id.
+``GET /api/eventlist/``
+    List of all events in memory with a unique event id.
 
-``GET /api/error/ERRORID``
-    Retrieve the payload for a specific error by id.
+``GET /api/event/EVENT_ID``
+    Retrieve the payload for a specific event by id.
 
 ``POST /api/flush/``
-    Flushes the error manager of all errors.
+    Flushes the event manager of all events.
 
-You can use multiple project ids. Kent will keep the errors separate.
+You can use multiple project ids. Kent will keep the events separate.
 
 If you run ``kent-server run`` with the defaults, your DSN is::
 
     http://public@localhost:5000/1    for project id 1
     http://public@localhost:5000/2    for project id 2
-    ...
+    etc.
 
 
 Kent definitely works with:

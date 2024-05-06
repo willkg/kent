@@ -5,15 +5,17 @@
 from dataclasses import dataclass
 import gzip
 import json
+import logging
 from logging.config import dictConfig
 import os
-from typing import Union
+from typing import Optional, Union
 import uuid
 import zlib
 
 from flask import Flask, request, render_template
 
 from kent import __version__
+from kent.utils import parse_envelope
 
 
 dictConfig(
@@ -46,48 +48,60 @@ dictConfig(
 BANNER = None
 
 
+def deep_get(structure, path, default=None):
+    node = structure
+    for part in path.split("."):
+        if part.startswith("["):
+            index = int(part[1:-1])
+            node = node[index]
+        elif part in node:
+            node = node[part]
+        else:
+            return default
+    return node
+
+
 @dataclass
 class Event:
     project_id: int
     event_id: str
 
-    # This is either a dict or a bytes depending on whether this is raven or
-    # sentry-sdk
-    payload: Union[dict, bytes]
+    # Dict with subdicts: envelope_header, header, body
+    envelope_header: Optional[dict] = None
+    header: Optional[dict] = None
+    body: Optional[Union[dict, bytes]] = None
 
     @property
     def summary(self):
-        if not self.payload:
+        if not self.body:
             return "no summary"
 
-        if isinstance(self.payload, dict):
+        if isinstance(self.body, dict):
             # Sentry exceptions events
-            exceptions = self.payload.get("exception", {}).get("values", [])
+            exceptions = deep_get(self.body, "exception.values", default=[])
             if exceptions:
                 first = exceptions[0]
                 return f"{first['type']}: {first['value']}"
 
             # Sentry message
-            msg = self.payload.get("message", None)
+            msg = deep_get(self.body, "message", default=None)
             if msg:
                 return msg
 
             # CSP security report (older browsers)
-            if "csp-report" in self.payload:
-                directive = self.payload["csp-report"].get(
-                    "violated-directive", "unknown"
+            if "csp-report" in self.body:
+                directive = deep_get(
+                    self.body, "csp-report.violated-directive", default="unknown"
                 )
                 summary = f"csp-report: {directive}"
                 return summary
 
-        elif isinstance(self.payload, list):
+        elif isinstance(self.body, list):
             # CSP security report (newer browsers)
-            if self.payload[0].get("type") == "csp-violation":
+            if self.body[0].get("type") == "csp-violation":
                 directives = []
-                for section in self.payload:
-                    directives.append(
-                        section.get("body", {}).get("effectiveDirective", "unknown")
-                    )
+                for section in self.body[0]:
+                    directives.append(section.get("effectiveDirective") or "unknown")
 
                 all_directives = ", ".join(directives)
                 summary = f"csp-report: {all_directives}"
@@ -97,17 +111,18 @@ class Event:
 
     @property
     def timestamp(self):
-        if self.payload and isinstance(self.payload, dict):
-            # NOTE(willkg): timestamp is a string
-            return self.payload.get("timestamp", "none")
-
-        return "none"
+        # NOTE(willkg): timestamp is a string
+        return isinstance(self.body, dict) and self.body.get("timestamp") or "none"
 
     def to_dict(self):
         return {
             "project_id": self.project_id,
             "event_id": self.event_id,
-            "payload": self.payload,
+            "payload": {
+                "envelope_header": self.envelope_header,
+                "header": self.header,
+                "body": self.body,
+            },
         }
 
 
@@ -118,8 +133,16 @@ class EventManager:
         # List of Event instances
         self.events = []
 
-    def add_event(self, event_id, project_id, payload):
-        event = Event(project_id=project_id, event_id=event_id, payload=payload)
+    def add_event(
+        self, event_id, project_id, envelope_header=None, header=None, body=None
+    ):
+        event = Event(
+            project_id=project_id,
+            event_id=event_id,
+            envelope_header=envelope_header,
+            header=header,
+            body=body,
+        )
         self.events.append(event)
 
         while len(self.events) > self.MAX_EVENTS:
@@ -147,19 +170,6 @@ INTERESTING_HEADERS = [
 ]
 
 
-def deep_get(path, structure, default=None):
-    node = structure
-    for part in path.split("."):
-        if part.startswith("["):
-            index = int(part[1:-1])
-            node = node[index]
-        elif part in node:
-            node = node[part]
-        else:
-            return default
-    return node
-
-
 def create_app(test_config=None):
     dev_mode = os.environ.get("KENT_DEV", "0") == "1"
 
@@ -174,6 +184,10 @@ def create_app(test_config=None):
 
     if BANNER:
         app.logger.info(BANNER)
+
+    if dev_mode:
+        logging.getLogger("kent").setLevel(logging.DEBUG)
+        app.logger.debug("Dev mode on.")
 
     @app.route("/", methods=["GET"])
     def index_view():
@@ -200,7 +214,14 @@ def create_app(test_config=None):
     @app.route("/api/eventlist/", methods=["GET"])
     def api_event_list_view():
         app.logger.info("GET /api/eventlist/")
-        event_ids = [event.event_id for event in EVENTS.get_events()]
+        event_ids = [
+            {
+                "project_id": event.project_id,
+                "event_id": event.event_id,
+                "summary": event.summary,
+            }
+            for event in EVENTS.get_events()
+        ]
         return {"events": event_ids}
 
     @app.route("/api/flush/", methods=["POST"])
@@ -235,6 +256,8 @@ def create_app(test_config=None):
         else:
             body = request.data
 
+        app.logger.debug(f"{body}")
+
         # JSON decode it
         try:
             json_body = json.loads(body)
@@ -244,29 +267,83 @@ def create_app(test_config=None):
             body = {"error": "Kent could not decode body; see logs"}
             raise
 
-        EVENTS.add_event(event_id=event_id, project_id=project_id, payload=json_body)
+        EVENTS.add_event(event_id=event_id, project_id=project_id, body=json_body)
 
         # Log interesting bits in the body
         if "exception" in json_body:
             app.logger.info(
                 "%s: exception: %s %s",
                 event_id,
-                deep_get("exception.values.[0].type", json_body),
-                deep_get("exception.values.[0].value", json_body),
+                deep_get(json_body, "exception.values.[0].type"),
+                deep_get(json_body, "exception.values.[0].value"),
             )
         if "message" in json_body:
-            app.logger.info("%s: message: %s", event_id, deep_get("message", json_body))
+            app.logger.info("%s: message: %s", event_id, deep_get(json_body, "message"))
         app.logger.info(
             "%s: sdk: %s %s",
             event_id,
-            deep_get("sdk.name", json_body),
-            deep_get("sdk.version", json_body),
+            deep_get(json_body, "sdk.name"),
+            deep_get(json_body, "sdk.version"),
         )
 
         # Log event url
         event_url = f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
         app.logger.info("%s: project id: %s", event_id, project_id)
         app.logger.info("%s: url: %s", event_id, event_url)
+
+        return {"success": True}
+
+    @app.route("/api/<int:project_id>/envelope/", methods=["POST"])
+    def envelope_view(project_id):
+        app.logger.info(f"POST /api/{project_id}/envelope/")
+        request_id = str(uuid.uuid4())
+        log_headers(dev_mode, request_id, request.headers)
+
+        # Decompress it
+        if request.headers.get("content-encoding") == "gzip":
+            body = gzip.decompress(request.data)
+        elif request.headers.get("content-encoding") == "deflate":
+            body = zlib.decompress(request.data)
+        else:
+            body = request.data
+
+        app.logger.debug(f"{body}")
+
+        for item in parse_envelope(body):
+            event_id = str(uuid.uuid4())
+            EVENTS.add_event(
+                event_id=event_id,
+                project_id=project_id,
+                envelope_header=item.envelope_header,
+                header=item.header,
+                body=item.body,
+            )
+
+            # Log interesting bits in the body
+            if "exception" in item.body:
+                app.logger.info(
+                    "%s: exception: %s %s",
+                    event_id,
+                    deep_get(item.body, "exception.values.[0].type"),
+                    deep_get(item.body, "exception.values.[0].value"),
+                )
+            if "message" in item.body:
+                app.logger.info(
+                    "%s: message: %s", event_id, deep_get(item.body, "message")
+                )
+            app.logger.info(
+                "%s: sdk: %s %s",
+                event_id,
+                deep_get(item.body, "sdk.name"),
+                deep_get(item.body, "sdk.version"),
+            )
+
+            # Log event url
+            event_url = (
+                f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
+            )
+            app.logger.info("%s: project id: %s", event_id, project_id)
+            app.logger.info("%s: url: %s", event_id, event_url)
 
         return {"success": True}
 
@@ -278,6 +355,8 @@ def create_app(test_config=None):
 
         body = request.data
 
+        app.logger.debug(f"{body}")
+
         # Decode the JSON payload
         try:
             json_body = json.loads(body)
@@ -287,7 +366,7 @@ def create_app(test_config=None):
             body = {"error": "Kent could not decode body; see logs"}
             raise
 
-        EVENTS.add_event(event_id=event_id, project_id=project_id, payload=json_body)
+        EVENTS.add_event(event_id=event_id, project_id=project_id, body=json_body)
 
         # Log interesting bits in the body
         for i, report in enumerate(json_body):

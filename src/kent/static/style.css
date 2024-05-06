@@ -5,3 +5,10 @@
 th, td {
     vertical-align: top;
 }
+
+pre code {
+    text-wrap: wrap;
+    text-wrap-mode: wrap;
+    overflow: scroll;
+    word-break: break-all;
+}
