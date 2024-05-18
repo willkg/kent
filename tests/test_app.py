@@ -1,7 +1,7 @@
 import pytest
 import uuid
 
-from kent.app import create_app, Error
+from kent.app import create_app, Event
 
 
 @pytest.fixture
@@ -12,13 +12,13 @@ def client():
         yield client
 
 
-class TestError:
+class TestEvent:
     @pytest.mark.parametrize(
         "payload, expected",
         [
-            # Empty error payload
+            # Empty event payload
             ({}, "no summary"),
-            # Error payload for an exception
+            # Event payload for an exception
             (
                 {
                     "exception": {
@@ -39,12 +39,12 @@ class TestError:
         ],
     )
     def test_summary(self, payload, expected):
-        error = Error(
+        event = Event(
             project_id="0",
-            error_id="9884b351-1e8f-4a28-8a9a-fc0033467e4e",
+            event_id="9884b351-1e8f-4a28-8a9a-fc0033467e4e",
             payload=payload,
         )
-        assert error.summary == expected
+        assert event.summary == expected
 
 
 def test_index_view(client):
@@ -68,44 +68,44 @@ def test_api_flush_view(client):
     assert resp.json == {"success": True}
 
 
-class TestAPIErrorListView:
-    def test_empty_errorlist(self, client):
-        resp = client.get("/api/errorlist/")
-        assert resp.json == {"errors": []}
+class TestAPIEventListView:
+    def test_empty_eventlist(self, client):
+        resp = client.get("/api/eventlist/")
+        assert resp.json == {"events": []}
 
-    def test_nonempty_errorlist(self, client):
-        # Store an error
+    def test_nonempty_eventlist(self, client):
+        # Store an event
         resp = client.post("/api/1/store/", json={"id": "xyz"})
         assert resp.status_code == 200
 
-        resp = client.get("/api/errorlist/")
+        resp = client.get("/api/eventlist/")
         assert len(resp.json) == 1
 
 
-class TestAPIErrorView:
+class TestAPIEventView:
     def test_404(self, client):
-        error_id = str(uuid.uuid4())
-        resp = client.get(f"/api/error/{error_id}")
+        event_id = str(uuid.uuid4())
+        resp = client.get(f"/api/event/{event_id}")
         assert resp.status_code == 404
-        assert resp.json == {"error": f"Error {error_id} not found"}
+        assert resp.json == {"error": f"Event {event_id} not found"}
 
-    def test_error_exists(self, client):
-        error_payload = {"id": "new error"}
+    def test_event_exists(self, client):
+        event_payload = {"id": "new event"}
 
-        # Store an error
-        resp = client.post("/api/1/store/", json=error_payload)
+        # Store an event
+        resp = client.post("/api/1/store/", json=event_payload)
         assert resp.status_code == 200
 
-        # Get all the errors
-        resp = client.get("/api/errorlist/")
+        # Get all the events
+        resp = client.get("/api/eventlist/")
         assert resp.status_code == 200
-        error_id = resp.json["errors"][0]
+        event_id = resp.json["events"][0]
 
-        # Get the error by error_id
-        resp = client.get(f"/api/error/{error_id}")
+        # Get the event by event_id
+        resp = client.get(f"/api/event/{event_id}")
         assert resp.status_code == 200
         assert resp.json == {
             "project_id": 1,
-            "error_id": error_id,
-            "payload": error_payload,
+            "event_id": event_id,
+            "payload": event_payload,
         }
