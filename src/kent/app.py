@@ -47,9 +47,9 @@ BANNER = None
 
 
 @dataclass
-class Error:
+class Event:
     project_id: int
-    error_id: str
+    event_id: str
 
     # This is either a dict or a bytes depending on whether this is raven or
     # sentry-sdk
@@ -106,39 +106,39 @@ class Error:
     def to_dict(self):
         return {
             "project_id": self.project_id,
-            "error_id": self.error_id,
+            "event_id": self.event_id,
             "payload": self.payload,
         }
 
 
-class ErrorManager:
-    MAX_ERRORS = 100
+class EventManager:
+    MAX_EVENTS = 100
 
     def __init__(self):
-        # List of Error instances
-        self.errors = []
+        # List of Event instances
+        self.events = []
 
-    def add_error(self, error_id, project_id, payload):
-        error = Error(project_id=project_id, error_id=error_id, payload=payload)
-        self.errors.append(error)
+    def add_event(self, event_id, project_id, payload):
+        event = Event(project_id=project_id, event_id=event_id, payload=payload)
+        self.events.append(event)
 
-        while len(self.errors) > self.MAX_ERRORS:
-            self.errors.pop(0)
+        while len(self.events) > self.MAX_EVENTS:
+            self.events.pop(0)
 
-    def get_error(self, error_id):
-        for error in self.errors:
-            if error.error_id == error_id:
-                return error
+    def get_event(self, event_id):
+        for event in self.events:
+            if event.event_id == event_id:
+                return event
         return None
 
-    def get_errors(self):
-        return self.errors
+    def get_events(self):
+        return self.events
 
     def flush(self):
-        self.errors = []
+        self.events = []
 
 
-ERRORS = ErrorManager()
+EVENTS = EventManager()
 
 
 INTERESTING_HEADERS = [
@@ -164,7 +164,7 @@ def create_app(test_config=None):
     dev_mode = os.environ.get("KENT_DEV", "0") == "1"
 
     # Always start an app with an empty error manager
-    ERRORS.flush()
+    EVENTS.flush()
 
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(SECRET_KEY="dev")
@@ -184,29 +184,29 @@ def create_app(test_config=None):
             "index.html",
             host=host,
             dsn=dsn,
-            errors=ERRORS.get_errors(),
+            events=EVENTS.get_events(),
             version=__version__,
         )
 
-    @app.route("/api/error/<error_id>", methods=["GET"])
-    def api_error_view(error_id):
-        app.logger.info(f"GET /api/error/{error_id}")
-        error = ERRORS.get_error(error_id)
-        if error is None:
-            return {"error": f"Error {error_id} not found"}, 404
+    @app.route("/api/event/<event_id>", methods=["GET"])
+    def api_event_view(event_id):
+        app.logger.info(f"GET /api/event/{event_id}")
+        event = EVENTS.get_event(event_id)
+        if event is None:
+            return {"error": f"Event {event_id} not found"}, 404
 
-        return error.to_dict()
+        return event.to_dict()
 
-    @app.route("/api/errorlist/", methods=["GET"])
-    def api_error_list_view():
-        app.logger.info("GET /api/errorlist/")
-        error_ids = [error.error_id for error in ERRORS.get_errors()]
-        return {"errors": error_ids}
+    @app.route("/api/eventlist/", methods=["GET"])
+    def api_event_list_view():
+        app.logger.info("GET /api/eventlist/")
+        event_ids = [event.event_id for event in EVENTS.get_events()]
+        return {"events": event_ids}
 
     @app.route("/api/flush/", methods=["POST"])
     def api_flush_view():
         app.logger.info("POST /api/flush")
-        ERRORS.flush()
+        EVENTS.flush()
         return {"success": True}
 
     def log_headers(dev_mode, error_id, headers):
@@ -224,8 +224,8 @@ def create_app(test_config=None):
     @app.route("/api/<int:project_id>/store/", methods=["POST"])
     def store_view(project_id):
         app.logger.info(f"POST /api/{project_id}/store/")
-        error_id = str(uuid.uuid4())
-        log_headers(dev_mode, error_id, request.headers)
+        event_id = str(uuid.uuid4())
+        log_headers(dev_mode, event_id, request.headers)
 
         # Decompress it
         if request.headers.get("content-encoding") == "gzip":
@@ -235,46 +235,46 @@ def create_app(test_config=None):
         else:
             body = request.data
 
-        # If it's JSON, then decode it
+        # JSON decode it
         try:
             json_body = json.loads(body)
         except Exception:
-            app.logger.exception("%s: exception when JSON-decoding body.", error_id)
-            app.logger.error("%s: %s", error_id, json_body)
+            app.logger.exception("%s: exception when JSON-decoding body.", event_id)
+            app.logger.error("%s: %s", event_id, json_body)
             body = {"error": "Kent could not decode body; see logs"}
             raise
 
-        ERRORS.add_error(error_id=error_id, project_id=project_id, payload=json_body)
+        EVENTS.add_event(event_id=event_id, project_id=project_id, payload=json_body)
 
         # Log interesting bits in the body
         if "exception" in json_body:
             app.logger.info(
                 "%s: exception: %s %s",
-                error_id,
+                event_id,
                 deep_get("exception.values.[0].type", json_body),
                 deep_get("exception.values.[0].value", json_body),
             )
         if "message" in json_body:
-            app.logger.info("%s: message: %s", error_id, deep_get("message", json_body))
+            app.logger.info("%s: message: %s", event_id, deep_get("message", json_body))
         app.logger.info(
             "%s: sdk: %s %s",
-            error_id,
+            event_id,
             deep_get("sdk.name", json_body),
             deep_get("sdk.version", json_body),
         )
 
         # Log event url
-        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
-        app.logger.info("%s: project id: %s", error_id, project_id)
-        app.logger.info("%s: url: %s", error_id, event_url)
+        event_url = f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
+        app.logger.info("%s: project id: %s", event_id, project_id)
+        app.logger.info("%s: url: %s", event_id, event_url)
 
         return {"success": True}
 
     @app.route("/api/<int:project_id>/security/", methods=["POST"])
     def security_view(project_id):
         app.logger.info(f"POST /api/{project_id}/security/")
-        error_id = str(uuid.uuid4())
-        log_headers(dev_mode, error_id, request.headers)
+        event_id = str(uuid.uuid4())
+        log_headers(dev_mode, event_id, request.headers)
 
         body = request.data
 
@@ -282,33 +282,33 @@ def create_app(test_config=None):
         try:
             json_body = json.loads(body)
         except Exception:
-            app.logger.exception("%s: exception when JSON-decoding body.", error_id)
-            app.logger.error("%s: %s", error_id, body)
+            app.logger.exception("%s: exception when JSON-decoding body.", event_id)
+            app.logger.error("%s: %s", event_id, body)
             body = {"error": "Kent could not decode body; see logs"}
             raise
 
-        ERRORS.add_error(error_id=error_id, project_id=project_id, payload=json_body)
+        EVENTS.add_event(event_id=event_id, project_id=project_id, payload=json_body)
 
         # Log interesting bits in the body
         for i, report in enumerate(json_body):
             if "type" in report:
                 app.logger.info(
                     "%s: %s: type: %s",
-                    error_id,
+                    event_id,
                     i,
                     report["type"],
                 )
         app.logger.info(
             "%s: project id: %s",
-            error_id,
+            event_id,
             project_id,
         )
 
         # Log event url
-        event_url = f"{request.scheme}://{request.headers['host']}/api/error/{error_id}"
+        event_url = f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
         app.logger.info(
             "%s: url: %s",
-            error_id,
+            event_id,
             event_url,
         )
 
