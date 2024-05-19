@@ -66,9 +66,13 @@ class Event:
     project_id: int
     event_id: str
 
-    # Dict with subdicts: envelope_header, header, body
+    # envelope_header when the envelope API is used
     envelope_header: Optional[dict] = None
+    # item header
     header: Optional[dict] = None
+    # item
+    # attachments will be stored as bytes, non-attachments as python
+    # datastructures
     body: Optional[Union[dict, bytes]] = None
 
     @property
@@ -77,6 +81,11 @@ class Event:
             return "no summary"
 
         if isinstance(self.body, dict):
+            # Kent body parsing errors
+            kent_error = self.body.get("error")
+            if kent_error:
+                return kent_error
+
             # Sentry exceptions events
             exceptions = deep_get(self.body, "exception.values", default=[])
             if exceptions:
@@ -264,7 +273,11 @@ def create_app(test_config=None):
         except Exception:
             app.logger.exception("%s: exception when JSON-decoding body.", event_id)
             app.logger.error("%s: %s", event_id, json_body)
-            body = {"error": "Kent could not decode body; see logs"}
+            EVENTS.add_event(
+                event_id=event_id,
+                project_id=project_id,
+                body={"error": "Kent could not decode body; see logs"},
+            )
             raise
 
         EVENTS.add_event(event_id=event_id, project_id=project_id, body=json_body)
@@ -363,7 +376,11 @@ def create_app(test_config=None):
         except Exception:
             app.logger.exception("%s: exception when JSON-decoding body.", event_id)
             app.logger.error("%s: %s", event_id, body)
-            body = {"error": "Kent could not decode body; see logs"}
+            EVENTS.add_event(
+                event_id=event_id,
+                project_id=project_id,
+                body={"error": "Kent could not decode body; see logs"},
+            )
             raise
 
         EVENTS.add_event(event_id=event_id, project_id=project_id, body=json_body)
