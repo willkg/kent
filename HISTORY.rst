@@ -9,6 +9,10 @@ Backwards incompatible changes:
 
 * Dropped support for Python 3.8. (#88)
 
+Changes:
+
+* Add support for Python 3.13. (#87)
+
 
 2.0.0 (May 19th, 2024)
 ======================
