@@ -13,6 +13,9 @@ Changes:
 
 * Add support for Python 3.13. (#87)
 
+* Fix summaries for all the different types of things Kent handles. This also
+  reworks how CSP reports are handled. (#91)
+
 
 2.0.0 (May 19th, 2024)
 ======================

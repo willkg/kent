@@ -20,7 +20,10 @@ cli.show_server_banner = lambda *args, **kwargs: True
 def maybe_show_banner():
     ctx = cli.cli.make_context(info_name=None, args=sys.argv)
     args = cli.cli.parse_args(ctx, args=sys.argv)
-    if args[0] == "run":
+    if not args:
+        cli.cli.parse_args(ctx, args=["kent-server", "--help"])
+
+    elif args[0] == "run":
         cmd = cli.cli.get_command(ctx, name="run")
         parser = cmd.make_parser(ctx)
         opts, _, _ = parser.parse_args(args[1:])
