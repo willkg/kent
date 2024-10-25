@@ -2,8 +2,8 @@
 HISTORY
 =======
 
-2.1.0 (in development)
-======================
+2.1.0 (October 25th, 2024)
+==========================
 
 Backwards incompatible changes:
 
