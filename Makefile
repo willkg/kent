@@ -24,11 +24,11 @@ test:  ## Run tests and static typechecking
 
 .PHONY: format
 format:  ## Format files
-	tox exec -e py38-lint -- ruff format
+	tox exec -e py39-lint -- ruff format
 
 .PHONY: lint
 lint:  ## Lint files
-	tox -e py38-lint
+	tox -e py39-lint
 
 .PHONY: clean
 clean:  ## Clean build artifacts

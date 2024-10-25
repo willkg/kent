@@ -2,6 +2,14 @@
 HISTORY
 =======
 
+x.y.z (in development)
+======================
+
+Backwards incompatible changes:
+
+* Dropped support for Python 3.8. (#88)
+
+
 2.0.0 (May 19th, 2024)
 ======================
 
