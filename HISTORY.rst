@@ -2,7 +2,7 @@
 HISTORY
 =======
 
-x.y.z (in development)
+2.1.0 (in development)
 ======================
 
 Backwards incompatible changes:
