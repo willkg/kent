@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from dataclasses import dataclass
+import datetime
 import gzip
 import json
 import logging
@@ -97,7 +98,7 @@ class Event:
             if msg:
                 return msg
 
-            # CSP security report (older browsers)
+            # CSP security report (older browsers--single report per payload)
             if "csp-report" in self.body:
                 directive = deep_get(
                     self.body, "csp-report.violated-directive", default="unknown"
@@ -105,15 +106,11 @@ class Event:
                 summary = f"csp-report: {directive}"
                 return summary
 
-        elif isinstance(self.body, list):
-            # CSP security report (newer browsers)
-            if self.body[0].get("type") == "csp-violation":
-                directives = []
-                for section in self.body[0]:
-                    directives.append(section.get("effectiveDirective") or "unknown")
-
-                all_directives = ", ".join(directives)
-                summary = f"csp-report: {all_directives}"
+            if self.body.get("type") == "csp-violation":
+                directive = deep_get(
+                    self.body, "body.effectiveDirective", default="unknown"
+                )
+                summary = f"csp-report: {directive}"
                 return summary
 
         return "no summary"
@@ -121,7 +118,7 @@ class Event:
     @property
     def timestamp(self):
         # NOTE(willkg): timestamp is a string
-        return isinstance(self.body, dict) and self.body.get("timestamp") or "none"
+        return self.body.get("timestamp") or str(datetime.datetime.now())
 
     def to_dict(self):
         return {
@@ -156,6 +153,7 @@ class EventManager:
 
         while len(self.events) > self.MAX_EVENTS:
             self.events.pop(0)
+        return event
 
     def get_event(self, event_id):
         for event in self.events:
@@ -267,7 +265,7 @@ def create_app(test_config=None):
 
         app.logger.debug(f"{body}")
 
-        # JSON decode it
+        # JSON decode payload
         try:
             json_body = json.loads(body)
         except Exception:
@@ -280,24 +278,20 @@ def create_app(test_config=None):
             )
             raise
 
-        EVENTS.add_event(event_id=event_id, project_id=project_id, body=json_body)
+        event = EVENTS.add_event(
+            event_id=event_id, project_id=project_id, body=json_body
+        )
 
-        # Log interesting bits in the body
-        if "exception" in json_body:
-            app.logger.info(
-                "%s: exception: %s %s",
-                event_id,
-                deep_get(json_body, "exception.values.[0].type"),
-                deep_get(json_body, "exception.values.[0].value"),
-            )
-        if "message" in json_body:
-            app.logger.info("%s: message: %s", event_id, deep_get(json_body, "message"))
+        # Log sentry sdk information from payload
         app.logger.info(
             "%s: sdk: %s %s",
             event_id,
             deep_get(json_body, "sdk.name"),
             deep_get(json_body, "sdk.version"),
         )
+
+        # Log event summary
+        app.logger.info("%s: summary: %s", event_id, event.summary)
 
         # Log event url
         event_url = f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
@@ -324,7 +318,7 @@ def create_app(test_config=None):
 
         for item in parse_envelope(body):
             event_id = str(uuid.uuid4())
-            EVENTS.add_event(
+            event = EVENTS.add_event(
                 event_id=event_id,
                 project_id=project_id,
                 envelope_header=item.envelope_header,
@@ -332,24 +326,16 @@ def create_app(test_config=None):
                 body=item.body,
             )
 
-            # Log interesting bits in the body
-            if "exception" in item.body:
-                app.logger.info(
-                    "%s: exception: %s %s",
-                    event_id,
-                    deep_get(item.body, "exception.values.[0].type"),
-                    deep_get(item.body, "exception.values.[0].value"),
-                )
-            if "message" in item.body:
-                app.logger.info(
-                    "%s: message: %s", event_id, deep_get(item.body, "message")
-                )
+            # Log sentry sdk information from payload
             app.logger.info(
                 "%s: sdk: %s %s",
                 event_id,
                 deep_get(item.body, "sdk.name"),
                 deep_get(item.body, "sdk.version"),
             )
+
+            # Log event summary
+            app.logger.info("%s: summary: %s", event_id, event.summary)
 
             # Log event url
             event_url = (
@@ -383,30 +369,38 @@ def create_app(test_config=None):
             )
             raise
 
-        EVENTS.add_event(event_id=event_id, project_id=project_id, body=json_body)
-
-        # Log interesting bits in the body
-        for i, report in enumerate(json_body):
-            if "type" in report:
-                app.logger.info(
-                    "%s: %s: type: %s",
-                    event_id,
-                    i,
-                    report["type"],
+        if isinstance(json_body, list):
+            # Single payload with multiple reports per CSP 3
+            for csp_report in json_body:
+                event = EVENTS.add_event(
+                    event_id=event_id, project_id=project_id, body=csp_report
                 )
-        app.logger.info(
-            "%s: project id: %s",
-            event_id,
-            project_id,
-        )
 
-        # Log event url
-        event_url = f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
-        app.logger.info(
-            "%s: url: %s",
-            event_id,
-            event_url,
-        )
+                # Log event summary
+                app.logger.info("%s: summary: %s", event_id, event.summary)
+
+                # Log event url
+                event_url = (
+                    f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
+                )
+                app.logger.info("%s: project id: %s", event_id, project_id)
+                app.logger.info("%s: url: %s", event_id, event_url)
+
+        else:
+            # Old CSP report format where it's a single report
+            event = EVENTS.add_event(
+                event_id=event_id, project_id=project_id, body=json_body
+            )
+
+            # Log event summary
+            app.logger.info("%s: summary: %s", event_id, event.summary)
+
+            # Log event url
+            event_url = (
+                f"{request.scheme}://{request.headers['host']}/api/event/{event_id}"
+            )
+            app.logger.info("%s: project id: %s", event_id, project_id)
+            app.logger.info("%s: url: %s", event_id, event_url)
 
         return {"success": True}
 
