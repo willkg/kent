@@ -4,8 +4,8 @@ Kent
 
 Kent is a service for debugging and integration testing Sentry.
 
-:Code:          https://github.com/willkg/kent/
-:Issues:        https://github.com/willkg/kent/issues
+:Code:          https://github.com/mozilla-services/kent/
+:Issues:        https://github.com/mozilla-services/kent/issues
 :License:       MPL v2
 
 
