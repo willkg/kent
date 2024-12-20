@@ -38,6 +38,7 @@ dev = [
     "setuptools",
     "tox",
     "tox-gh-actions",
+    "tox-uv",
     "twine",
 ]
 
@@ -83,6 +84,7 @@ envlist =
     py311
     py312
     py313
+uv_python_preference = only-managed
 
 [gh-actions]
 python =

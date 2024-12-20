@@ -16,8 +16,8 @@ Goals of Kent:
 
 1. make it possible to debug ``before_send`` and ``before_breadcrumb``
    sanitization code when using sentry-sdk
-2. make it possible to debug other sentry event submission payload issues
-3. make it possible to write integration tests against a fake sentry instance
+2. make it possible to debug other Sentry event submission payload issues
+3. make it possible to write integration tests against a fake Sentry instance
 
 
 Quick start
@@ -28,18 +28,13 @@ Installing and running on your local machine
 
 1. Install Kent.
 
-   You can install Kent from PyPI with pipx or pip or whatever::
+   (Recommended) With `uv <https://docs.astral.sh/uv/>`__::
 
-      pipx install kent
+      uv tool install kent
 
-   You can install a REVISH ("main", branch name, commit, whatever) from
-   GitHub::
+   Install from a git clone::
 
-      pipx install https://github.com/willkg/kent/archive/refs/heads/<REVISH>.zip
-
-   You can install from a checked out version of this repository::
-
-      pipx install .
+      uv tool install .
 
 2. Run Kent::
 
@@ -130,8 +125,13 @@ add an issue with details or a pull request to update the README.
 Development
 ===========
 
-Install
--------
+Requirements: Python, `uv <https://docs.astral.sh/uv/>`__, `just
+<https://just.systems/>`__
 
-1. ``mkvirtualenv kent``
-2. ``pip install -e '.[dev]'``
+Create a development environment::
+
+    just devenv
+
+Then you can use rules listed in the ``justfile``::
+
+    just
